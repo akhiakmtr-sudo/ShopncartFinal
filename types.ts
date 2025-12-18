@@ -1,13 +1,15 @@
 export enum ProductCategory {
-  Fashion = 'Fashion',
-  Electronics = 'Electronics',
-  Mobiles = 'Mobiles',
-  Beauty = 'Beauty',
-  Furniture = 'Furniture',
-  HomeAppliances = 'Home Appliances',
-  Sports = 'Sports',
-  Toys = 'Toys',
-  Automobiles = 'Automobiles'
+  MobilesComputers = 'Mobiles, Computers',
+  TVAppliancesElectronics = 'TV, Appliances, Electronics',
+  MensFashion = "Men's Fashion",
+  WomensFashion = "Women's Fashion",
+  HomeKitchenPets = 'Home, Kitchen, Pets',
+  BeautyHealthGrocery = 'Beauty, Health, Grocery',
+  SportsFitnessBags = 'Sports, Fitness, Bags, Luggage',
+  ToysBabyKids = "Toys, Baby Products, Kids' Fashion",
+  CarMotorbikeIndustrial = 'Car, Motorbike, Industrial',
+  Books = 'Books',
+  MoviesMusicGames = 'Movies, Music & Video Games'
 }
 
 export interface Review {
