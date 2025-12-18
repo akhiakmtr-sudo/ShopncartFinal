@@ -7,29 +7,22 @@ import {
   Home, 
   Store, 
   Truck,
-  Headphones,
   Facebook,
   Instagram,
   Twitter,
   ArrowRight,
   X,
   LogOut,
-  LayoutDashboard,
   MapPin,
   Mail,
   Phone,
   Package,
   Save,
-  Calendar,
-  Building2,
-  Stethoscope,
   Loader2,
   CheckCircle,
   ShieldCheck,
   ChevronRight,
-  ChevronLeft,
   Settings,
-  CreditCard,
   AlertCircle,
   Star
 } from 'lucide-react';
@@ -333,7 +326,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
   const [categories, setCategories] = useState<string[]>(Object.values(ProductCategory));
-  const [bannerImage, setBannerImage] = useState('https://images.unsplash.com/photo-1543083115-638c32cd3d58?auto=format&fit=crop&q=80&w=1200');
+  const [bannerImage, setBannerImage] = useState('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1200');
   const [orders, setOrders] = useState<Order[]>([]);
 
   // View State
@@ -347,7 +340,6 @@ function App() {
   // UI State
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [drawerSubView, setDrawerSubView] = useState<'main'>('main');
 
   // Initial Session Check
   useEffect(() => {
@@ -529,9 +521,9 @@ function App() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent flex items-center px-8">
             <div className="text-white max-w-xs">
-               <h2 className="text-2xl md:text-3xl font-bold mb-2">Organic Wellness for a Better Life</h2>
-               <p className="text-sm opacity-90 mb-4">Discover the power of nature with our premium herbal extracts.</p>
-               <button className="bg-brand text-white px-6 py-2 rounded-full font-bold text-sm hover:bg-green-600 transition-colors">Shop Now</button>
+               <h2 className="text-2xl md:text-3xl font-bold mb-2">Everything You Need In One Place</h2>
+               <p className="text-sm opacity-90 mb-4">Quality products, unbeatable prices, and lightning-fast delivery.</p>
+               <button className="bg-brand text-white px-6 py-2 rounded-full font-bold text-sm hover:bg-green-600 transition-colors">Start Shopping</button>
             </div>
           </div>
         </div>
@@ -542,15 +534,15 @@ function App() {
           <div className="bg-green-50 p-2 rounded-full mb-1 text-brand">
             <Truck size={24} />
           </div>
-          <h3 className="font-bold text-sm text-gray-800">Swift Delivery</h3>
-          <p className="text-xs text-gray-500">Across India</p>
+          <h3 className="font-bold text-sm text-gray-800">Fast Delivery</h3>
+          <p className="text-xs text-gray-500">To Your Doorstep</p>
         </div>
         <div className="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center text-center border border-gray-100 animate-in zoom-in duration-500 delay-200">
           <div className="bg-green-50 p-2 rounded-full mb-1 text-brand">
             <ShieldCheck size={24} />
           </div>
-          <h3 className="font-bold text-sm text-gray-800">100% Pure</h3>
-          <p className="text-xs text-gray-500">Quality Assured</p>
+          <h3 className="font-bold text-sm text-gray-800">100% Genuine</h3>
+          <p className="text-xs text-gray-500">Verified Products</p>
         </div>
       </div>
 
@@ -560,7 +552,7 @@ function App() {
            <button onClick={() => navigate('shop')} className="text-brand text-sm font-semibold hover:underline">View All</button>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {products.slice(0, 4).map(product => (
+          {products.length > 0 ? products.slice(0, 8).map(product => (
             <ProductCard 
               key={product.id} 
               product={product} 
@@ -568,33 +560,37 @@ function App() {
               onAddToCart={addToCart} 
               onClick={(p) => { setSelectedProduct(p); navigate('product-detail'); }}
             />
-          ))}
+          )) : (
+            <div className="col-span-full py-12 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-200">
+              New products arriving soon. Check back later!
+            </div>
+          )}
         </div>
       </div>
 
       <section className="px-6 py-10 bg-white mx-4 rounded-2xl shadow-sm border border-gray-50 mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Our Roots</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Our Mission</h2>
         <div className="w-16 h-1 bg-brand mb-6"></div>
         <p className="text-gray-600 text-sm leading-relaxed text-justify">
-          At {APP_NAME}, we are committed to bringing you the finest selection of herbal remedies. Our products are sourced from sustainable farms and processed using methods that preserve their natural potency. We believe health is wealth, and nature holds the key.
+          At {APP_NAME}, we strive to redefine the online shopping experience. We bring you a curated selection of global brands and local favorites, ensuring quality and affordability are never compromised. Shop with confidence, shop with ease.
         </p>
       </section>
 
       <section className="px-6 py-10 bg-blue-900 text-white mx-4 rounded-2xl shadow-lg mb-12">
-        <h2 className="text-2xl font-bold mb-8 text-center">Get in Touch</h2>
+        <h2 className="text-2xl font-bold mb-8 text-center">Support Center</h2>
         <div className="grid gap-6 md:grid-cols-2">
           <div className="flex items-start space-x-4">
             <div className="bg-white/10 p-3 rounded-full shrink-0"><MapPin size={24} /></div>
             <div>
-              <h3 className="font-bold text-sm">Main Branch</h3>
-              <p className="text-blue-200 text-sm mt-1 leading-snug">46/A1, PKP Complex, Mannur, Palakkad, Kerala</p>
+              <h3 className="font-bold text-sm">Headquarters</h3>
+              <p className="text-blue-200 text-sm mt-1 leading-snug">Main Business Hub, India</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <div className="bg-white/10 p-3 rounded-full shrink-0"><Mail size={24} /></div>
             <div>
-              <h3 className="font-bold text-sm">Customer Care</h3>
-              <a href="mailto:care@greenleafherbals.com" className="text-blue-200 text-sm hover:text-white transition-colors">care@greenleafherbals.com</a>
+              <h3 className="font-bold text-sm">Customer Support</h3>
+              <a href="mailto:care@shopncart.store" className="text-blue-200 text-sm hover:text-white transition-colors">care@shopncart.store</a>
             </div>
           </div>
         </div>
@@ -618,7 +614,7 @@ function App() {
                  </div>
                  <div>
                     <p className="font-bold text-sm leading-tight">{user ? user.name : 'Welcome Guest'}</p>
-                    <p className="text-[10px] text-blue-200 truncate w-32">{user ? user.email : 'Log in for orders'}</p>
+                    <p className="text-[10px] text-blue-200 truncate w-32">{user ? user.email : 'Log in to shop'}</p>
                  </div>
                </div>
                <button onClick={() => setIsMobileMenuOpen(false)} className="p-1 hover:bg-white/10 rounded-full"><X size={20}/></button>
@@ -640,7 +636,7 @@ function App() {
                 </div>
 
                 <div className="bg-white mb-2 py-1">
-                  <div className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">My Hub</div>
+                  <div className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Account</div>
                   <button onClick={() => { navigate('orders'); setIsMobileMenuOpen(false); }} className="w-full text-left px-6 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50">
                     <div className="flex items-center"><Package size={18} className="mr-3 text-gray-400" /> <span>My Orders</span></div>
                     <ChevronRight size={16} className="text-gray-300" />
@@ -649,20 +645,6 @@ function App() {
                     <div className="flex items-center"><MapPin size={18} className="mr-3 text-gray-400" /> <span>Addresses</span></div>
                     <ChevronRight size={16} className="text-gray-300" />
                   </button>
-                </div>
-
-                <div className="bg-white py-1">
-                  <div className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shop All</div>
-                  {categories.map(cat => (
-                    <button 
-                      key={cat}
-                      onClick={() => { handleCategoryChange(cat); navigate('shop'); setIsMobileMenuOpen(false); }}
-                      className="w-full text-left px-6 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50"
-                    >
-                      <span className="text-sm">{cat}</span>
-                      <ChevronRight size={16} className="text-gray-300" />
-                    </button>
-                  ))}
                 </div>
             </div>
           </div>
@@ -700,7 +682,7 @@ function App() {
           <div className="relative">
              <input 
                type="text" 
-               placeholder="Search organic herbals..." 
+               placeholder="Search products, brands and more..." 
                value={searchQuery} 
                onChange={(e) => { setSearchQuery(e.target.value); if (e.target.value && currentView !== 'shop') navigate('shop'); }} 
                className="w-full bg-blue-800 border-none rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder-blue-300 focus:bg-white focus:text-gray-900 transition-all outline-none shadow-inner" 
@@ -747,7 +729,7 @@ function App() {
               ))}
             </div>
             {filteredProducts.length === 0 && (
-              <div className="text-center py-20 text-gray-400 italic">No herbals found matching your criteria.</div>
+              <div className="text-center py-20 text-gray-400 italic">No products found matching your search.</div>
             )}
           </div>
         )}
@@ -757,7 +739,7 @@ function App() {
             {cart.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
                 <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 mb-4 font-medium">Your bag is as light as a leaf.</p>
+                <p className="text-gray-500 mb-4 font-medium">Your bag is currently empty.</p>
                 <button onClick={() => navigate('shop')} className="bg-brand text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-green-100">Start Shopping</button>
               </div>
             ) : (
@@ -816,7 +798,7 @@ function App() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
           <div>
             <h4 className="text-white font-bold text-xl mb-6">{APP_NAME}</h4>
-            <p className="text-sm leading-relaxed mb-6">Premium organic extracts for a healthier tomorrow. Nature's wisdom, verified by science.</p>
+            <p className="text-sm leading-relaxed mb-6">Your premier destination for everything you need. From fashion to electronics, we deliver the best to your door.</p>
             <div className="flex space-x-6">
               <Facebook size={20} className="cursor-pointer hover:text-brand transition-colors" />
               <Instagram size={20} className="cursor-pointer hover:text-brand transition-colors" />
@@ -833,16 +815,16 @@ function App() {
             </ul>
           </div>
           <div>
-            <h4 className="text-white font-bold mb-6">Contact Us</h4>
+            <h4 className="text-white font-bold mb-6">Customer Service</h4>
             <ul className="space-y-4 text-sm">
-              <li className="flex items-start space-x-3"><Mail size={18} className="text-brand shrink-0" /> <span>care@greenleafherbals.com</span></li>
-              <li className="flex items-start space-x-3"><Phone size={18} className="text-brand shrink-0" /> <span>+91 98765 43210</span></li>
-              <li className="flex items-start space-x-3"><MapPin size={18} className="text-brand shrink-0" /> <span className="leading-tight">46/A1, PKP Complex, Mannur, Palakkad, Kerala</span></li>
+              <li className="flex items-start space-x-3"><Mail size={18} className="text-brand shrink-0" /> <span>care@shopncart.store</span></li>
+              <li className="flex items-start space-x-3"><Phone size={18} className="text-brand shrink-0" /> <span>+91 00000 00000</span></li>
+              <li className="flex items-start space-x-3"><MapPin size={18} className="text-brand shrink-0" /> <span className="leading-tight">Corporate Park, Business District, India</span></li>
             </ul>
           </div>
           <div>
             <h4 className="text-white font-bold mb-6">Newsletter</h4>
-            <p className="text-xs mb-4">Join our community for herbal tips and exclusive offers.</p>
+            <p className="text-xs mb-4">Stay updated with the latest trends and exclusive offers.</p>
             <div className="flex bg-gray-800 rounded-xl overflow-hidden p-1">
                <input type="email" placeholder="Your email" className="bg-transparent border-none px-4 py-2 text-xs text-white outline-none w-full" />
                <button className="bg-brand text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">Join</button>
@@ -850,7 +832,7 @@ function App() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto border-t border-gray-800 mt-12 pt-8 text-center text-xs">
-          <p>&copy; {new Date().getFullYear()} {APP_NAME}. Proudly rooted in Kerala.</p>
+          <p>&copy; {new Date().getFullYear()} {APP_NAME}. All Rights Reserved.</p>
         </div>
       </footer>
 

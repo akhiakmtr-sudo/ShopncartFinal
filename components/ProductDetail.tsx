@@ -70,7 +70,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         {/* Right Column: Details */}
         <div className="flex flex-col">
           <div className="mb-6">
-            <span className="text-xs font-bold text-brand uppercase tracking-wider bg-green-50 px-2 py-1 rounded">
+            <span className="text-xs font-bold text-brand uppercase tracking-wider bg-blue-50 px-2 py-1 rounded">
               {product.category}
             </span>
             <h1 className="text-3xl font-bold text-gray-900 mt-2 mb-1">{product.name}</h1>
@@ -96,14 +96,14 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
             <div className="flex space-x-4 mb-8">
               <button 
                 onClick={() => onAddToCart(product)}
-                className="flex-1 py-3 px-4 border border-brand text-brand font-bold rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center"
+                className="flex-1 py-3 px-4 border border-brand text-brand font-bold rounded-xl hover:bg-blue-50 transition-colors flex items-center justify-center"
               >
                 <ShoppingBag size={20} className="mr-2" />
                 Add to Cart
               </button>
               <button 
                 onClick={() => onBuyNow(product)}
-                className="flex-1 py-3 px-4 bg-brand text-white font-bold rounded-xl hover:bg-green-600 shadow-lg shadow-green-100 transition-all active:scale-95"
+                className="flex-1 py-3 px-4 bg-brand text-white font-bold rounded-xl hover:bg-blue-600 shadow-lg shadow-blue-100 transition-all active:scale-95"
               >
                 Buy Now
               </button>
@@ -113,37 +113,26 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="flex items-center space-x-3 text-xs text-gray-600 bg-gray-50 p-3 rounded-lg">
                 <Truck size={18} className="text-brand" />
-                <span>Free Delivery above ₹1999</span>
+                <span>Global Shipping Ready</span>
               </div>
               <div className="flex items-center space-x-3 text-xs text-gray-600 bg-gray-50 p-3 rounded-lg">
                 <ShieldCheck size={18} className="text-brand" />
-                <span>100% Organic Certified</span>
+                <span>Verified Manufacturer</span>
               </div>
             </div>
           </div>
 
           <hr className="border-gray-100 mb-6" />
 
-          {/* How to Use */}
+          {/* Details */}
           <div className="mb-6">
-            <h3 className="font-bold text-gray-900 mb-2">How to Use</h3>
-            <p className="text-gray-600 text-sm leading-relaxed">{product.howToUse}</p>
-          </div>
-
-          {/* Important Note */}
-          <div className="mb-6 bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-            <div className="flex items-start">
-              <AlertCircle size={18} className="text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
-              <div>
-                <h3 className="font-bold text-yellow-800 text-sm mb-1">Important Note</h3>
-                <p className="text-yellow-700 text-xs">{product.note}</p>
-              </div>
-            </div>
+            <h3 className="font-bold text-gray-900 mb-2">Specifications</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">{product.howToUse || 'Standard specifications apply for this product.'}</p>
           </div>
 
           {/* Manufacturer Details */}
           <div className="mb-8">
-            <h3 className="font-bold text-gray-900 mb-3">Manufacturer Details</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Seller Information</h3>
             <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-600 space-y-2 border border-gray-100">
               <p className="font-semibold text-gray-800">{product.manufacturer.name}</p>
               <div className="flex items-center space-x-2">
@@ -205,7 +194,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
                     onChange={(e) => setReviewText(e.target.value)}
                     className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-transparent outline-none"
                     rows={3}
-                    placeholder="Tell us what you think..."
+                    placeholder="Tell us about your experience..."
                     required
                   ></textarea>
                 </div>
@@ -219,7 +208,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
                   </button>
                   <button 
                     type="submit"
-                    className="px-4 py-2 text-xs font-bold text-white bg-brand rounded-lg hover:bg-green-600"
+                    className="px-4 py-2 text-xs font-bold text-white bg-brand rounded-lg hover:bg-blue-600"
                   >
                     Submit Review
                   </button>
@@ -227,30 +216,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
               </form>
             )}
 
-            {/* Mock Reviews List */}
             <div className="space-y-4">
-               {/* Static Mock Reviews for UI demonstration */}
-               <div className="border-b border-gray-100 pb-4">
-                  <div className="flex items-center justify-between mb-1">
-                     <span className="font-bold text-sm text-gray-800">Priya Sharma</span>
-                     <span className="text-xs text-gray-400">2 days ago</span>
-                  </div>
-                  <div className="flex text-yellow-400 mb-2">
-                    {[1,2,3,4,5].map(i => <Star key={i} size={12} className="fill-current" />)}
-                  </div>
-                  <p className="text-sm text-gray-600">Amazing product! Really helped with my issue. Will buy again.</p>
-               </div>
-               <div className="border-b border-gray-100 pb-4">
-                  <div className="flex items-center justify-between mb-1">
-                     <span className="font-bold text-sm text-gray-800">Rahul Verma</span>
-                     <span className="text-xs text-gray-400">1 week ago</span>
-                  </div>
-                  <div className="flex text-yellow-400 mb-2">
-                    {[1,2,3,4].map(i => <Star key={i} size={12} className="fill-current" />)}
-                    <Star size={12} className="text-gray-300" />
-                  </div>
-                  <p className="text-sm text-gray-600">Good quality packaging and fast delivery.</p>
-               </div>
+               <p className="text-gray-400 text-sm italic py-8 text-center border border-dashed border-gray-100 rounded-xl">Be the first to review this product!</p>
             </div>
           </div>
         </div>
