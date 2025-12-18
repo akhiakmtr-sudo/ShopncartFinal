@@ -36,6 +36,7 @@ import Auth from './components/Auth';
 import AdminDashboard from './components/AdminDashboard';
 import { PRODUCTS } from './constants';
 import { Product, CartItem, User, Order, ProductCategory } from './types';
+import { authService } from './services/authService';
 
 // -- Subcategory Data --
 const MENS_FASHION_SUB = [
@@ -515,6 +516,25 @@ function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [drawerSubView, setDrawerSubView] = useState<'main' | 'mens-fashion' | 'womens-fashion'>('main');
 
+  // Initial Session Check
+  useEffect(() => {
+    const checkUser = async () => {
+      setIsLoading(true);
+      try {
+        const currentUser = await authService.getCurrentUser();
+        if (currentUser) {
+          setUser(currentUser);
+          if (currentUser.role === 'admin') setCurrentView('admin');
+        }
+      } catch (err) {
+        console.error('Session check failed', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkUser();
+  }, []);
+
   // --- Global Loading Wrapper ---
   const navigate = async (view: ViewType) => {
     if (view === currentView) return;
@@ -524,11 +544,6 @@ function App() {
     window.scrollTo(0, 0);
     setIsLoading(false);
   };
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleCategoryChange = async (cat: string) => {
     setIsLoading(true);
@@ -576,6 +591,7 @@ function App() {
 
   const handleLogout = async () => {
     setIsLoading(true);
+    await authService.logout();
     await new Promise(resolve => setTimeout(resolve, 800));
     setUser(null);
     setCurrentView('home');

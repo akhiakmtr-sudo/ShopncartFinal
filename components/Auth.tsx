@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 import { Mail, Lock, User as UserIcon, ArrowLeft, Eye, EyeOff, KeyRound, ChevronLeft, Loader2 } from 'lucide-react';
+import { authService } from '../services/authService';
 
 interface AuthProps {
   onLogin: (user: User) => void;
@@ -24,8 +25,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
   
   // Logic States
   const [showPassword, setShowPassword] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState('');
-  const [tempUserData, setTempUserData] = useState<Partial<User>>({});
 
   // Reset error when view changes
   useEffect(() => {
@@ -34,39 +33,19 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
     setOtpInput('');
   }, [view]);
 
-  // Helper: Generate 4 digit OTP
-  const generateAndSendOTP = (targetEmail: string) => {
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    setGeneratedOtp(otp);
-    // SIMULATION: In a real app, this goes to backend -> SMTP.
-    setTimeout(() => {
-      alert(`[DEMO] Your OTP for ShopNcarT is: ${otp}`);
-    }, 500);
-    return otp;
-  };
-
   // --- Handlers ---
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setLoading(false);
-
-    if (email === 'admin@shopncart.store' && password === 'admin123') {
-      onLogin({ id: 'admin-1', name: 'Admin User', email, role: 'admin' });
-    } else if (email === 'user@shopncart.store' && password === 'user123') {
-      onLogin({
-        id: 'user-1', name: 'Jane Doe', email, role: 'user',
-        phone: '+91 98765 43210', address: '42, Green Valley', city: 'Kannur', state: 'Kerala', zip: '670001'
-      });
-    } else {
-      // Allow any mock login for demo if valid format
-      if (email.includes('@') && password.length >= 4) {
-         onLogin({ id: `user-${Date.now()}`, name: 'Demo User', email, role: 'user' });
-      } else {
-         setError('Invalid credentials. Try user@shopncart.store / user123');
-      }
+    setError('');
+    try {
+      const loggedInUser = await authService.login(email, password);
+      onLogin(loggedInUser);
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,33 +56,30 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
       return;
     }
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setLoading(false);
-
-    // Store data temporarily
-    setTempUserData({ name, email, role: 'user' });
-    // Send OTP
-    generateAndSendOTP(email);
-    setView('otp-signup');
+    setError('');
+    try {
+      await authService.register(name, email, password);
+      setView('otp-signup');
+      setSuccessMsg(`Confirmation code sent to ${email}`);
+    } catch (err: any) {
+      setError(err.message || 'Registration failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const verifySignupOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setLoading(false);
-
-    if (otpInput === generatedOtp) {
-      // Success: Create User
-      onLogin({
-        id: `user-${Date.now()}`,
-        name: tempUserData.name || '',
-        email: tempUserData.email || '',
-        role: 'user',
-        phone: '', address: '', city: '', state: '', zip: ''
-      });
-    } else {
-      setError('Invalid OTP. Please try again.');
+    setError('');
+    try {
+      await authService.confirmRegister(email, otpInput);
+      setSuccessMsg('Email verified! Please login.');
+      setTimeout(() => setView('login'), 2000);
+    } catch (err: any) {
+      setError(err.message || 'Invalid code.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,24 +90,21 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
       return;
     }
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setLoading(false);
-
-    generateAndSendOTP(email);
-    setView('otp-reset');
+    setError('');
+    try {
+      await authService.forgotPassword(email);
+      setView('otp-reset');
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset code.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const verifyResetOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setLoading(false);
-
-    if (otpInput === generatedOtp) {
-      setView('new-password');
-    } else {
-      setError('Invalid OTP. Please try again.');
-    }
+    // In Cognito flow, you verify the OTP at the same time you provide the new password
+    setView('new-password');
   };
 
   const handlePasswordReset = async (e: React.FormEvent) => {
@@ -145,16 +118,20 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
       return;
     }
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setLoading(false);
-
-    // Logic to update password in backend would go here
-    setSuccessMsg('Password reset successfully! Please login.');
-    setTimeout(() => {
-      setView('login');
-      setPassword('');
-      setConfirmPassword('');
-    }, 2000);
+    setError('');
+    try {
+      await authService.confirmNewPassword(email, otpInput, password);
+      setSuccessMsg('Password reset successfully! Please login.');
+      setTimeout(() => {
+        setView('login');
+        setPassword('');
+        setConfirmPassword('');
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || 'Password reset failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // --- Render Helpers ---
@@ -201,8 +178,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
     </button>
   );
 
-  // --- Views ---
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50 py-12">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-gray-100 relative">
@@ -222,7 +197,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
                 if (view === 'signup' || view === 'forgot-password') setView('login');
                 else if (view === 'otp-signup') setView('signup');
                 else if (view === 'otp-reset') setView('forgot-password');
-                else if (view === 'new-password') setView('login');
+                else if (view === 'new-password') setView('otp-reset');
               }}
               className="absolute -top-2 -left-2 text-gray-400 hover:text-gray-600 transition-colors p-2"
             >
@@ -241,8 +216,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
             <p className="text-sm text-gray-500 mt-2">
               {view === 'login' && 'Login to access your account'}
               {view === 'signup' && 'Sign up to start your journey'}
-              {view === 'forgot-password' && 'Enter your email to receive an OTP'}
-              {(view === 'otp-signup' || view === 'otp-reset') && `Enter the OTP sent to ${email}`}
+              {view === 'forgot-password' && 'Enter your email to receive a code'}
+              {(view === 'otp-signup' || view === 'otp-reset') && `Enter the code sent to ${email}`}
               {view === 'new-password' && 'Create a strong password'}
             </p>
           </div>
@@ -284,11 +259,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
                 Sign Up
               </button>
             </div>
-
-            <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-              <p className="text-xs text-gray-400 mb-2">Demo Credentials</p>
-              <p className="text-xs text-gray-500">user@shopncart.store / user123</p>
-            </div>
           </form>
         )}
 
@@ -315,7 +285,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
           <form onSubmit={initiateForgotPassword} className="space-y-4">
             {renderInput(<Mail size={18}/>, "email", "Enter your registered email", email, setEmail)}
 
-            <SubmitButton text="Send OTP" />
+            <SubmitButton text="Send Code" />
 
             <button type="button" onClick={() => setView('login')} className="w-full text-gray-500 text-sm py-2 hover:text-gray-800">
               Cancel
@@ -323,17 +293,17 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
           </form>
         )}
 
-        {/* --- VIEW: OTP VERIFICATION (Shared for Signup & Reset) --- */}
+        {/* --- VIEW: OTP VERIFICATION --- */}
         {(view === 'otp-signup' || view === 'otp-reset') && (
           <form onSubmit={view === 'otp-signup' ? verifySignupOtp : verifyResetOtp} className="space-y-6">
             <div className="flex justify-center">
               <input
                 type="text"
-                maxLength={4}
+                maxLength={6}
                 value={otpInput}
                 onChange={(e) => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
-                className="w-32 text-center text-3xl tracking-widest py-3 border-b-2 border-brand focus:border-green-600 outline-none font-mono bg-transparent"
-                placeholder="XXXX"
+                className="w-40 text-center text-3xl tracking-widest py-3 border-b-2 border-brand focus:border-green-600 outline-none font-mono bg-transparent"
+                placeholder="XXXXXX"
                 autoFocus
               />
             </div>
@@ -342,14 +312,14 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
               Didn't receive code? 
               <button 
                 type="button" 
-                onClick={() => generateAndSendOTP(email)}
+                onClick={() => authService.resendCode(email)}
                 className="text-brand font-bold ml-1 hover:underline"
               >
                 Resend
               </button>
             </p>
 
-            <SubmitButton text="Verify OTP" />
+            <SubmitButton text="Verify Code" />
           </form>
         )}
 
