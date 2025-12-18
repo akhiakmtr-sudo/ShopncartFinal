@@ -47,12 +47,6 @@ export interface CartItem extends Product {
   image: string;
 }
 
-export interface ChatMessage {
-  role: 'user' | 'model';
-  text: string;
-  isStreaming?: boolean;
-}
-
 export interface User {
   id: string;
   name: string;

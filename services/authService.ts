@@ -11,6 +11,7 @@ import {
   getCurrentUser as getAmplifyUser
 } from 'aws-amplify/auth';
 import { User } from '../types';
+import { ADMIN_EMAIL } from '../constants';
 
 /**
  * AWS COGNITO CONFIGURATION
@@ -45,8 +46,8 @@ export const authService = {
       id: authUser.userId,
       name: attributes.name || 'User',
       email: attributes.email || email,
-      // Admin check updated for the new domain
-      role: (attributes.email === 'admin@greenleafherbals.com') ? 'admin' : 'user',
+      // Check against the configured ADMIN_EMAIL
+      role: (attributes.email === ADMIN_EMAIL) ? 'admin' : 'user',
       phone: attributes.phone_number,
       address: attributes['custom:address'],
       city: attributes['custom:city'],
@@ -100,7 +101,7 @@ export const authService = {
         id: authUser.userId,
         name: attributes.name || 'User',
         email: attributes.email || '',
-        role: (attributes.email === 'admin@greenleafherbals.com') ? 'admin' : 'user',
+        role: (attributes.email === ADMIN_EMAIL) ? 'admin' : 'user',
         phone: attributes.phone_number,
         address: attributes['custom:address'],
         city: attributes['custom:city'],

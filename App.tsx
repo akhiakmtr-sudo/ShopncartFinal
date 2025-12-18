@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ShoppingBag, 
@@ -26,7 +25,6 @@ import {
   Stethoscope,
   Loader2,
   CheckCircle,
-  // Fix: Added missing ShieldCheck import from lucide-react
   ShieldCheck,
   ChevronRight,
   ChevronLeft,
@@ -39,8 +37,6 @@ import ProductCard from './components/ProductCard';
 import ProductDetail from './components/ProductDetail';
 import Auth from './components/Auth';
 import AdminDashboard from './components/AdminDashboard';
-// Import the new AI Chat component
-import AIChat from './components/AIChat';
 import { PRODUCTS, APP_NAME } from './constants';
 import { Product, CartItem, User, Order, ProductCategory } from './types';
 import { authService } from './services/authService';
@@ -551,7 +547,6 @@ function App() {
         </div>
         <div className="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center text-center border border-gray-100 animate-in zoom-in duration-500 delay-200">
           <div className="bg-green-50 p-2 rounded-full mb-1 text-brand">
-            {/* Using ShieldCheck icon here */}
             <ShieldCheck size={24} />
           </div>
           <h3 className="font-bold text-sm text-gray-800">100% Pure</h3>
@@ -865,9 +860,6 @@ function App() {
         <button onClick={() => navigate('cart')} className={`flex flex-col items-center justify-center w-full h-full relative transition-colors ${currentView === 'cart' ? 'text-brand' : 'text-gray-400'}`}><ShoppingBag size={22} /><span className="text-[9px] mt-1 font-bold uppercase tracking-wider">Bag</span></button>
         <button onClick={() => user ? setIsMobileMenuOpen(true) : navigate('auth')} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${user ? 'text-brand' : 'text-gray-400'}`}><UserIcon size={22} /><span className="text-[9px] mt-1 font-bold uppercase tracking-wider">{user ? 'Me' : 'Join'}</span></button>
       </nav>
-
-      {/* Floating AI Herbal Assistant */}
-      <AIChat />
     </div>
   );
 }

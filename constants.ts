@@ -51,3 +51,9 @@ export const PRODUCTS: Product[] = [
 ];
 
 export const APP_NAME = "Green Leaf Herbals";
+
+/**
+ * Any user registering with this email will be granted 
+ * administrative access to the store dashboard.
+ */
+export const ADMIN_EMAIL = "admin@greenleafherbals.com";
