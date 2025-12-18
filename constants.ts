@@ -1,23 +1,18 @@
-import { Product, ProductCategory } from './types';
+import { Product } from './types';
 
-// Generic manufacturer template
-const DEFAULT_MANUFACTURER = {
-  name: "ShopNcarT Global",
-  contact: "+91 0000000000",
-  email: "care@shopncart.store",
-  address: "Main Business District, India"
+/**
+ * Generic manufacturer template for ShopNcarT products
+ */
+export const DEFAULT_MANUFACTURER = {
+  name: "ShopNcarT Global Logistics",
+  contact: "+91 800-SHOP-NOW",
+  email: "support@shopncart.com",
+  address: "International Commerce Zone, Tech Park, Bangalore"
 };
 
 /**
- * Empty product list - Mock data removed as requested.
- * Admin can add products via the dashboard.
+ * Initial products are managed via the Admin Dashboard and stored in Supabase.
  */
 export const PRODUCTS: Product[] = [];
 
 export const APP_NAME = "ShopNcarT";
-
-/**
- * Any user registering with this email will be granted 
- * administrative access to the store dashboard.
- */
-export const ADMIN_EMAIL = "admin@shopncart.store";

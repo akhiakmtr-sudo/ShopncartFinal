@@ -1,115 +1,129 @@
-import { Amplify } from 'aws-amplify';
-import { 
-  signIn, 
-  signUp, 
-  confirmSignUp, 
-  resendSignUpCode, 
-  resetPassword, 
-  confirmResetPassword, 
-  signOut, 
-  fetchUserAttributes,
-  getCurrentUser as getAmplifyUser
-} from 'aws-amplify/auth';
+
 import { User } from '../types';
-import { ADMIN_EMAIL } from '../constants';
+import { supabase } from './supabase';
 
 /**
- * AWS COGNITO CONFIGURATION
- * Connected to Green Leaf Herbals User Pool
+ * Green Leaf Herbals Authentication Service
+ * Roles (admin/user) are managed in the Supabase 'profiles' table.
  */
-const awsConfig = {
-  Auth: {
-    Cognito: {
-      userPoolId: 'us-east-1_T2qB7n6By', 
-      userPoolClientId: '10014e9s15qp3n3qld0ug2sf1h', 
-      loginWith: {
-        email: true
-      }
-    }
-  }
-};
-
-Amplify.configure(awsConfig);
-
 export const authService = {
   async login(email: string, password: string): Promise<User> {
-    const { isSignedIn, nextStep } = await signIn({ username: email, password });
-    
-    if (nextStep?.signInStep === 'CONFIRM_SIGN_UP') {
-      throw new Error('Please confirm your email before logging in.');
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+    if (!data.user) throw new Error('Authentication failed: No user found.');
+
+    // Fetch profile containing the 'role' column from Supabase
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('name, role, phone, address, city, state, zip')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profileError) {
+      console.warn("Profile not found, defaulting to user role.");
     }
 
-    const authUser = await getAmplifyUser();
-    const attributes = await fetchUserAttributes();
-    
     return {
-      id: authUser.userId,
-      name: attributes.name || 'User',
-      email: attributes.email || email,
-      // Check against the configured ADMIN_EMAIL
-      role: (attributes.email === ADMIN_EMAIL) ? 'admin' : 'user',
-      phone: attributes.phone_number,
-      address: attributes['custom:address'],
-      city: attributes['custom:city'],
-      state: attributes['custom:state'],
-      zip: attributes['custom:zip']
+      id: data.user.id,
+      name: profile?.name || data.user.email?.split('@')[0] || 'User',
+      email: data.user.email || '',
+      // Role is derived strictly from the database
+      role: (profile?.role === 'admin') ? 'admin' : 'user',
+      phone: profile?.phone,
+      address: profile?.address,
+      city: profile?.city,
+      state: profile?.state,
+      zip: profile?.zip
     };
   },
 
   async register(name: string, email: string, password: string) {
-    return await signUp({
-      username: email,
+    const { data, error } = await supabase.auth.signUp({
+      email,
       password,
       options: {
-        userAttributes: {
-          email,
-          name
-        }
-      }
+        data: {
+          full_name: name,
+        },
+      },
     });
+
+    if (error) throw error;
+
+    if (data.user) {
+      // Create a profile record for the new user. 
+      // Note: In a production Supabase setup, the 'role' column should default to 'user' via SQL.
+      await supabase.from('profiles').insert({
+        id: data.user.id,
+        name: name,
+        email: email,
+        role: 'user' // Explicitly set as user on signup
+      });
+    }
+
+    return data.user;
   },
 
   async confirmRegister(email: string, code: string) {
-    return await confirmSignUp({ username: email, confirmationCode: code });
-  },
-
-  async resendCode(email: string) {
-    return await resendSignUpCode({ username: email });
-  },
-
-  async forgotPassword(email: string) {
-    return await resetPassword({ username: email });
-  },
-
-  async confirmNewPassword(email: string, code: string, password: any) {
-    return await confirmResetPassword({ 
-      username: email, 
-      confirmationCode: code, 
-      newPassword: password 
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: code,
+      type: 'signup',
     });
+    if (error) throw error;
+    return true;
   },
 
   async logout() {
-    await signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   },
 
   async getCurrentUser(): Promise<User | null> {
-    try {
-      const authUser = await getAmplifyUser();
-      const attributes = await fetchUserAttributes();
-      return {
-        id: authUser.userId,
-        name: attributes.name || 'User',
-        email: attributes.email || '',
-        role: (attributes.email === ADMIN_EMAIL) ? 'admin' : 'user',
-        phone: attributes.phone_number,
-        address: attributes['custom:address'],
-        city: attributes['custom:city'],
-        state: attributes['custom:state'],
-        zip: attributes['custom:zip']
-      };
-    } catch (err) {
-      return null;
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name, role, phone, address, city, state, zip')
+      .eq('id', user.id)
+      .single();
+
+    return {
+      id: user.id,
+      name: profile?.name || user.email?.split('@')[0] || 'User',
+      email: user.email || '',
+      role: (profile?.role === 'admin') ? 'admin' : 'user',
+      phone: profile?.phone,
+      address: profile?.address,
+      city: profile?.city,
+      state: profile?.state,
+      zip: profile?.zip
+    };
+  },
+
+  async forgotPassword(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) throw error;
+    return true;
+  },
+
+  async resendCode(email: string) {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+    });
+    if (error) throw error;
+    return true;
+  },
+
+  async confirmNewPassword(email: string, code: string, password: any) {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+    return true;
   }
 };

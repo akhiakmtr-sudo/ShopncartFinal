@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Star, MessageSquare } from 'lucide-react';
+import { Plus, Star } from 'lucide-react';
 import { Product, User } from '../types';
 
 interface ProductCardProps {
@@ -22,60 +22,55 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, user, onAddToCart, o
     }
   };
 
+  const discount = product.mrp > product.price 
+    ? Math.round(((product.mrp - product.price) / product.mrp) * 100) 
+    : 0;
+
   return (
     <div 
       onClick={() => onClick(product)}
-      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-md transition-all cursor-pointer group"
+      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-xl hover:translate-y-[-4px] transition-all cursor-pointer group relative"
     >
-      <div className="relative aspect-square overflow-hidden bg-gray-100">
+      {discount > 0 && (
+        <div className="absolute top-3 left-3 z-10 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-sm">
+          {discount}% OFF
+        </div>
+      )}
+      
+      <div className="relative aspect-square overflow-hidden bg-gray-50">
         <img 
           src={product.images[0]} 
           alt={product.name} 
-          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
         />
-        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-bold text-gray-700 flex items-center">
+        <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg text-[10px] font-bold text-gray-700 flex items-center shadow-sm">
           <Star className="w-3 h-3 text-yellow-400 mr-1 fill-current" />
-          {product.rating} <span className="text-gray-400 font-normal ml-1">({product.reviews})</span>
+          {product.rating}
         </div>
       </div>
       
-      <div className="p-3 flex flex-col flex-grow">
-        <div className="text-xs text-green-600 font-medium mb-1 uppercase tracking-wide">
-          {product.category}
+      <div className="p-4 flex flex-col flex-grow">
+        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">
+          {product.brand}
         </div>
-        <h3 className="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">
+        <h3 className="font-bold text-gray-900 text-sm mb-2 line-clamp-2 leading-tight">
           {product.name}
         </h3>
         
-        {/* Review Input for Logged In Users - Inline */}
-        {showReviewInput && user?.role === 'user' ? (
-          <div className="mb-3 bg-gray-50 p-2 rounded-lg" onClick={(e) => e.stopPropagation()}>
-             <div className="flex items-center justify-between mb-2">
-               <span className="text-xs font-medium">Rate:</span>
-               <div className="flex space-x-1">
-                 {[1,2,3,4,5].map(star => (
-                   <button key={star} onClick={() => setUserRating(star)}>
-                     <Star size={12} className={star <= userRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} />
-                   </button>
-                 ))}
-               </div>
-             </div>
-             <button onClick={handleReviewSubmit} className="w-full bg-brand text-white text-xs py-1 rounded">Submit</button>
-          </div>
-        ) : null}
-
-        <div className="flex items-center justify-between mt-auto pt-3">
-          <span className="font-bold text-lg text-gray-900">₹{product.price}</span>
-          <div className="flex space-x-2">
-             <button 
-               onClick={(e) => { e.stopPropagation(); onAddToCart(product); }}
-               className="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center hover:bg-green-600 active:scale-95 transition-all shadow-green-100 shadow-md"
-               aria-label="Add to cart"
-             >
-               <Plus size={18} />
-             </button>
-          </div>
+        <div className="flex items-baseline space-x-2 mt-auto">
+          <span className="font-black text-lg text-gray-900">₹{product.price}</span>
+          {product.mrp > product.price && (
+            <span className="text-[11px] text-gray-400 line-through">₹{product.mrp}</span>
+          )}
         </div>
+
+        <button 
+          onClick={(e) => { e.stopPropagation(); onAddToCart(product); }}
+          className="w-full mt-3 bg-brand text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center hover:bg-blue-600 transition-all shadow-lg shadow-blue-100 active:scale-95"
+          aria-label="Add to cart"
+        >
+          <Plus size={16} className="mr-1" /> Add
+        </button>
       </div>
     </div>
   );

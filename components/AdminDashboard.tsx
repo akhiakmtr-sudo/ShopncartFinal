@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Package, 
-  ShoppingCart, 
-  Image, 
-  List, 
-  Plus, 
-  Trash2, 
-  Edit2, 
-  CheckCircle, 
-  XCircle,
-  LogOut,
-  Loader2
+  Package, ShoppingCart, Image as ImageIcon, List, Plus, Trash2, 
+  Edit2, CheckCircle, XCircle, LogOut, Loader2, AlertCircle, 
+  MessageSquare, RefreshCw
 } from 'lucide-react';
-import { Product, Order } from '../types';
+import { Product, Order, SupportTicket } from '../types';
+import { dbService } from '../services/dbService';
 
 interface AdminDashboardProps {
   products: Product[];
@@ -29,373 +22,196 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({
-  products,
-  orders,
-  bannerImage,
-  categories,
-  onUpdateProduct,
-  onAddProduct,
-  onDeleteProduct,
-  onUpdateOrderStatus,
-  onUpdateBanner,
-  onAddCategory,
-  onDeleteCategory,
-  onLogout
-}) => {
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'banner' | 'categories'>('products');
-  const [isEditingProduct, setIsEditingProduct] = useState<Product | null>(null);
-  const [newCategory, setNewCategory] = useState('');
-  const [tempBannerUrl, setTempBannerUrl] = useState(bannerImage);
+const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'banner' | 'categories' | 'help'>('products');
   const [isLoading, setIsLoading] = useState(false);
-
-  // Form State for Product
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [productForm, setProductForm] = useState<Partial<Product>>({
-    name: '',
-    price: 0,
-    category: '',
-    images: [''],
-    description: ''
+    name: '', brand: '', price: 0, mrp: 0, category: '', images: ['', '', '', '', ''], description: '', note: ''
   });
 
-  const switchTab = async (tab: typeof activeTab) => {
-    if (tab === activeTab) return;
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 600)); // Simulate data fetch
-    setActiveTab(tab);
-    setIsLoading(false);
-  };
-
-  const handleProductSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    if (isEditingProduct) {
-      onUpdateProduct({ ...isEditingProduct, ...productForm } as Product);
-    } else {
-      onAddProduct({
-        ...productForm,
-        id: Date.now().toString(),
-        rating: 0,
-        reviews: 0
-      } as Product);
+  useEffect(() => {
+    if (activeTab === 'help') {
+      const fetchTickets = async () => {
+        setIsLoading(true);
+        try {
+          const data = await dbService.getTickets();
+          setTickets(data);
+        } catch (e) {}
+        finally { setIsLoading(false); }
+      };
+      fetchTickets();
     }
-    setIsEditingProduct(null);
-    setProductForm({ name: '', price: 0, category: categories[0], images: [''], description: '' });
-    setIsLoading(false);
-  };
+  }, [activeTab]);
 
-  const startEdit = (product: Product) => {
-    setIsLoading(true);
-    setTimeout(() => {
-        setIsEditingProduct(product);
-        setProductForm(product);
-        setIsLoading(false);
-    }, 300);
-  };
-
-  const cancelEdit = () => {
-    setIsEditingProduct(null);
-    setProductForm({ name: '', price: 0, category: categories[0], images: [''], description: '' });
+  const handleResolveTicket = async (id: string) => {
+    await dbService.resolveTicket(id);
+    setTickets(prev => prev.map(t => t.id === id ? { ...t, status: 'Resolved' } : t));
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg fixed h-full z-10 hidden md:flex flex-col">
-        <div className="p-6 border-b">
-          <h2 className="text-2xl font-bold text-brand">Admin Panel</h2>
-        </div>
-        <nav className="flex-grow p-4 space-y-2">
-          <button 
-            onClick={() => switchTab('products')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'products' ? 'bg-green-50 text-brand font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
-          >
-            <Package size={20} />
-            <span>Products</span>
-          </button>
-          <button 
-            onClick={() => switchTab('orders')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'orders' ? 'bg-green-50 text-brand font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
-          >
-            <ShoppingCart size={20} />
-            <span>Orders</span>
-          </button>
-          <button 
-            onClick={() => switchTab('banner')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'banner' ? 'bg-green-50 text-brand font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
-          >
-            <Image size={20} />
-            <span>Ads & Banner</span>
-          </button>
-          <button 
-            onClick={() => switchTab('categories')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'categories' ? 'bg-green-50 text-brand font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
-          >
-            <List size={20} />
-            <span>Categories</span>
-          </button>
+    <div className="min-h-screen bg-white flex">
+      <aside className="w-64 bg-primary-900 text-white fixed h-full flex flex-col p-6">
+        <h2 className="text-2xl font-black tracking-tighter mb-12">ShopNcarT</h2>
+        <nav className="flex-grow space-y-4">
+          {[
+            { id: 'products', label: 'Inventory', icon: <Package size={18}/> },
+            { id: 'orders', label: 'Orders & Returns', icon: <ShoppingCart size={18}/> },
+            { id: 'help', label: 'Customer Help', icon: <MessageSquare size={18}/> },
+            { id: 'banner', label: 'Storefront Ads', icon: <ImageIcon size={18}/> },
+            { id: 'categories', label: 'Categories', icon: <List size={18}/> }
+          ].map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`w-full flex items-center space-x-3 p-3 rounded-xl transition-all ${activeTab === tab.id ? 'bg-primary-600 shadow-lg' : 'opacity-60 hover:opacity-100'}`}
+            >
+              {tab.icon} <span className="text-sm font-bold">{tab.label}</span>
+            </button>
+          ))}
         </nav>
-        <div className="p-4 border-t">
-          <button 
-            onClick={onLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors"
-          >
-            <LogOut size={20} />
-            <span>Logout</span>
-          </button>
-        </div>
-      </div>
+        <button onClick={props.onLogout} className="flex items-center space-x-3 text-red-400 p-3 hover:bg-white/5 rounded-xl transition-colors"><LogOut size={18}/> <span className="text-sm font-bold">Sign Out</span></button>
+      </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 md:ml-64 p-8 relative min-h-screen">
+      <main className="flex-1 ml-64 p-10 bg-primary-50/20">
+        {isLoading && <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-50 flex items-center justify-center"><Loader2 className="animate-spin text-primary-600" /></div>}
         
-        {isLoading && (
-            <div className="absolute inset-0 bg-white/80 z-20 flex items-center justify-center backdrop-blur-sm">
-                <Loader2 size={40} className="text-brand animate-spin" />
-            </div>
+        {activeTab === 'products' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+             <div className="flex justify-between items-center">
+               <h1 className="text-3xl font-black text-primary-900">Inventory Management</h1>
+             </div>
+             <form onSubmit={(e) => { e.preventDefault(); props.onAddProduct({ ...productForm, id: Date.now().toString(), rating: 5, reviews: 0, manufacturer: { name: 'ShopNcarT Fulfillment', address: 'Warehouse A', contact: '000', email: 'dispatch@shopncart.com' } } as Product); }} className="bg-white p-8 rounded-3xl shadow-sm border border-primary-50 grid grid-cols-2 gap-6">
+                <input required className="p-3 border rounded-xl" placeholder="Product Name" onChange={e => setProductForm({...productForm, name: e.target.value})} />
+                <input required className="p-3 border rounded-xl" placeholder="Brand" onChange={e => setProductForm({...productForm, brand: e.target.value})} />
+                <select className="p-3 border rounded-xl" onChange={e => setProductForm({...productForm, category: e.target.value})}>
+                  <option>Select Category</option>
+                  {props.categories.map(c => <option key={c}>{c}</option>)}
+                </select>
+                <div className="flex space-x-4">
+                  <input required type="number" className="p-3 border rounded-xl flex-1" placeholder="Price" onChange={e => setProductForm({...productForm, price: parseFloat(e.target.value)})} />
+                  <input required type="number" className="p-3 border rounded-xl flex-1" placeholder="MRP" onChange={e => setProductForm({...productForm, mrp: parseFloat(e.target.value)})} />
+                </div>
+                <textarea className="p-3 border rounded-xl col-span-2" placeholder="Description" rows={3} onChange={e => setProductForm({...productForm, description: e.target.value})} />
+                <button className="bg-primary-600 text-white font-black py-4 rounded-xl col-span-2 shadow-lg hover:bg-primary-700 transition-all">Add New Item</button>
+             </form>
+             <div className="bg-white rounded-3xl shadow-sm border border-primary-50 overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-primary-50">
+                    <tr><th className="p-4 font-black">PRODUCT</th><th className="p-4 font-black">PRICE</th><th className="p-4 font-black">ACTIONS</th></tr>
+                  </thead>
+                  <tbody>
+                    {props.products.map(p => (
+                      <tr key={p.id} className="border-t border-primary-50 hover:bg-gray-50 transition-colors">
+                        <td className="p-4 font-bold">{p.name}</td>
+                        <td className="p-4 font-bold">₹{p.price}</td>
+                        <td className="p-4"><button onClick={() => props.onDeleteProduct(p.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"><Trash2 size={16}/></button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+             </div>
+          </div>
         )}
 
-        {/* Products Management */}
-        {activeTab === 'products' && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-gray-800">Product Management</h1>
-              <button 
-                 onClick={() => {
-                   setIsEditingProduct(null);
-                   setProductForm({ name: '', price: 0, category: categories[0] || '', images: [''], description: '' });
-                   const formElement = document.getElementById('product-form');
-                   if (formElement) formElement.scrollIntoView({ behavior: 'smooth' });
-                 }}
-                 className="bg-brand text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-600"
-              >
-                <Plus size={18} />
-                <span>Add Product</span>
-              </button>
-            </div>
+        {activeTab === 'orders' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+             <h1 className="text-3xl font-black text-primary-900">Order Tracking & Returns</h1>
+             <div className="bg-white rounded-3xl shadow-sm border border-primary-50 overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-primary-50">
+                    <tr><th className="p-4 font-black">ORDER ID</th><th className="p-4 font-black">CUSTOMER</th><th className="p-4 font-black">STATUS</th><th className="p-4 font-black">ACTIONS</th></tr>
+                  </thead>
+                  <tbody>
+                    {props.orders.map(order => (
+                      <tr key={order.id} className="border-t border-primary-50">
+                        <td className="p-4 font-mono">{order.id.slice(-6)}</td>
+                        <td className="p-4 font-bold">{order.customerName}</td>
+                        <td className="p-4">
+                          <span className={`px-2 py-1 rounded-lg uppercase tracking-tighter font-black ${
+                            order.status.includes('Return') || order.status === 'Refunded' ? 'bg-red-50 text-red-600' : 'bg-primary-50 text-primary-600'
+                          }`}>{order.status}</span>
+                          {order.returnReason && <p className="text-[10px] text-red-400 mt-1 italic font-medium">Reason: {order.returnReason}</p>}
+                        </td>
+                        <td className="p-4 flex space-x-2">
+                          <button onClick={() => props.onUpdateOrderStatus(order.id, 'Shipped')} className="p-2 text-blue-500 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors" title="Mark Shipped"><Package size={14}/></button>
+                          <button onClick={() => props.onUpdateOrderStatus(order.id, 'Delivered')} className="p-2 text-green-500 bg-green-50 rounded-lg hover:bg-green-100 transition-colors" title="Mark Delivered"><CheckCircle size={14}/></button>
+                          {order.status === 'Return Requested' && (
+                            <>
+                              <button onClick={() => props.onUpdateOrderStatus(order.id, 'Refunded')} className="p-2 text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition-colors" title="Approve Refund"><RefreshCw size={14}/></button>
+                              <button onClick={() => props.onUpdateOrderStatus(order.id, 'Return Rejected')} className="p-2 text-gray-400 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors" title="Reject Return"><XCircle size={14}/></button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+             </div>
+          </div>
+        )}
 
-            {/* Product Form */}
-            <div id="product-form" className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h3 className="font-bold mb-4">{isEditingProduct ? 'Edit Product' : 'Add New Product'}</h3>
-              <form onSubmit={handleProductSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input 
-                  type="text" 
-                  placeholder="Product Name" 
-                  value={productForm.name} 
-                  onChange={e => setProductForm({...productForm, name: e.target.value})}
-                  className="p-2 border rounded-lg"
-                  required
-                />
-                <input 
-                  type="number" 
-                  placeholder="Price" 
-                  value={productForm.price || ''} 
-                  onChange={e => setProductForm({...productForm, price: parseFloat(e.target.value)})}
-                  className="p-2 border rounded-lg"
-                  required
-                />
-                <select 
-                  value={productForm.category} 
-                  onChange={e => setProductForm({...productForm, category: e.target.value})}
-                  className="p-2 border rounded-lg"
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <input 
-                  type="text" 
-                  placeholder="Image URL" 
-                  value={productForm.images?.[0] || ''} 
-                  onChange={e => setProductForm({...productForm, images: [e.target.value]})}
-                  className="p-2 border rounded-lg"
-                  required
-                />
-                <textarea 
-                  placeholder="Description" 
-                  value={productForm.description} 
-                  onChange={e => setProductForm({...productForm, description: e.target.value})}
-                  className="p-2 border rounded-lg md:col-span-2"
-                  required
-                />
-                <div className="md:col-span-2 flex space-x-2">
-                  <button type="submit" className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-green-600">
-                    {isEditingProduct ? 'Update Product' : 'Create Product'}
-                  </button>
-                  {isEditingProduct && (
-                    <button type="button" onClick={cancelEdit} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">
-                      Cancel
-                    </button>
-                  )}
-                </div>
-              </form>
-            </div>
-
-            {/* Product List */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="p-4 font-semibold text-gray-600">Product</th>
-                    <th className="p-4 font-semibold text-gray-600">Category</th>
-                    <th className="p-4 font-semibold text-gray-600">Price</th>
-                    <th className="p-4 font-semibold text-gray-600 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {products.map(product => (
-                    <tr key={product.id} className="hover:bg-gray-50">
-                      <td className="p-4 flex items-center space-x-3">
-                        <img src={product.images[0]} alt={product.name} className="w-10 h-10 rounded object-cover" />
-                        <span className="font-medium text-gray-800">{product.name}</span>
-                      </td>
-                      <td className="p-4 text-gray-600">{product.category}</td>
-                      <td className="p-4 text-gray-600">₹{product.price}</td>
-                      <td className="p-4 text-right">
-                        <div className="flex justify-end space-x-2">
-                          <button onClick={() => startEdit(product)} className="p-1 text-blue-500 hover:bg-blue-50 rounded">
-                            <Edit2 size={16} />
-                          </button>
-                          <button onClick={() => onDeleteProduct(product.id)} className="p-1 text-red-500 hover:bg-red-50 rounded">
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {activeTab === 'help' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <h1 className="text-3xl font-black text-primary-900">Customer Help Tickets</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               {tickets.map(t => (
+                 <div key={t.id} className={`p-6 rounded-3xl border ${t.status === 'Open' ? 'bg-white border-primary-100' : 'bg-primary-50/50 border-transparent opacity-60'}`}>
+                    <div className="flex justify-between items-start mb-4">
+                       <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase ${t.status === 'Open' ? 'bg-primary-600 text-white' : 'bg-primary-200 text-primary-800'}`}>{t.status}</span>
+                       <p className="text-[10px] text-gray-400 font-bold">{new Date(t.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <h3 className="font-black text-primary-900 mb-2">{t.subject}</h3>
+                    <p className="text-sm text-gray-600 mb-6">{t.message}</p>
+                    <div className="flex justify-between items-center pt-4 border-t border-primary-50">
+                       <p className="text-[10px] font-black uppercase text-primary-600">{t.userName}</p>
+                       {t.status === 'Open' && (
+                         <button onClick={() => handleResolveTicket(t.id)} className="text-[10px] font-black text-primary-600 hover:underline uppercase transition-all">Resolve Ticket</button>
+                       )}
+                    </div>
+                 </div>
+               ))}
             </div>
           </div>
         )}
 
-        {/* Orders Management */}
-        {activeTab === 'orders' && (
-           <div className="space-y-6 animate-in fade-in duration-300">
-             <h1 className="text-2xl font-bold text-gray-800">Order Management</h1>
-             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="p-4 font-semibold text-gray-600">Order ID</th>
-                      <th className="p-4 font-semibold text-gray-600">Customer</th>
-                      <th className="p-4 font-semibold text-gray-600">Total</th>
-                      <th className="p-4 font-semibold text-gray-600">Status</th>
-                      <th className="p-4 font-semibold text-gray-600 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {orders.length === 0 ? (
-                      <tr><td colSpan={5} className="p-8 text-center text-gray-400">No orders found.</td></tr>
-                    ) : (
-                      orders.map(order => (
-                        <tr key={order.id} className="hover:bg-gray-50">
-                          <td className="p-4 font-mono text-xs">{order.id}</td>
-                          <td className="p-4">{order.customerName}</td>
-                          <td className="p-4 font-medium">₹{order.total}</td>
-                          <td className="p-4">
-                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                              order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
-                              order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' :
-                              'bg-yellow-100 text-yellow-700'
-                            }`}>
-                              {order.status}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right flex justify-end space-x-2">
-                             <button onClick={() => onUpdateOrderStatus(order.id, 'Shipped')} className="p-1 text-blue-500" title="Mark Shipped"><Package size={16}/></button>
-                             <button onClick={() => onUpdateOrderStatus(order.id, 'Delivered')} className="p-1 text-green-500" title="Mark Delivered"><CheckCircle size={16}/></button>
-                             <button onClick={() => onUpdateOrderStatus(order.id, 'Pending')} className="p-1 text-yellow-500" title="Mark Pending"><XCircle size={16}/></button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+        {activeTab === 'banner' && (
+           <div className="space-y-8 animate-in fade-in duration-300">
+             <h1 className="text-3xl font-black text-primary-900">Storefront Banner Ads</h1>
+             <div className="bg-white p-8 rounded-3xl shadow-sm border border-primary-50 max-w-2xl">
+                <img src={props.bannerImage} className="w-full h-40 object-cover rounded-2xl mb-6 shadow-lg" />
+                <input 
+                  className="w-full p-4 border rounded-2xl mb-4 focus:ring-2 focus:ring-primary-500 outline-none transition-all" 
+                  defaultValue={props.bannerImage} 
+                  onBlur={e => props.onUpdateBanner(e.target.value)} 
+                  placeholder="Paste banner image URL..."
+                />
+                <p className="text-xs text-primary-600 font-bold flex items-center"><AlertCircle size={14} className="mr-2"/> Recommended aspect ratio: 16:9 or 21:9.</p>
              </div>
            </div>
         )}
 
-        {/* Banner Management */}
-        {activeTab === 'banner' && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <h1 className="text-2xl font-bold text-gray-800">Ads & Banner Management</h1>
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 max-w-2xl">
-               <div className="mb-4">
-                 <label className="block text-sm font-medium text-gray-700 mb-2">Current Banner Preview</label>
-                 <div className="h-48 rounded-lg overflow-hidden border">
-                   <img src={bannerImage} alt="Banner" className="w-full h-full object-cover" />
-                 </div>
-               </div>
-               <div className="flex space-x-2">
-                 <input 
-                   type="text" 
-                   value={tempBannerUrl} 
-                   onChange={(e) => setTempBannerUrl(e.target.value)}
-                   className="flex-grow p-2 border rounded-lg"
-                   placeholder="Enter new image URL"
-                 />
-                 <button 
-                   onClick={() => onUpdateBanner(tempBannerUrl)}
-                   className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-green-600"
-                 >
-                   Update Banner
-                 </button>
-               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Category Management */}
         {activeTab === 'categories' && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-             <h1 className="text-2xl font-bold text-gray-800">Category Management</h1>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                 <h3 className="font-bold mb-4">Add Category</h3>
-                 <div className="flex space-x-2">
-                   <input 
-                     type="text" 
-                     value={newCategory} 
-                     onChange={(e) => setNewCategory(e.target.value)}
-                     className="flex-grow p-2 border rounded-lg"
-                     placeholder="New Category Name"
-                   />
-                   <button 
-                     onClick={async () => {
-                        if (newCategory) {
-                          setIsLoading(true);
-                          await new Promise(resolve => setTimeout(resolve, 500));
-                          onAddCategory(newCategory);
-                          setNewCategory('');
-                          setIsLoading(false);
-                        }
-                     }}
-                     className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-green-600"
-                   >
-                     Add
-                   </button>
-                 </div>
-               </div>
-               
-               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="font-bold mb-4">Existing Categories</h3>
-                  <ul className="space-y-2">
-                    {categories.map(cat => (
-                      <li key={cat} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span>{cat}</span>
-                        <button onClick={() => onDeleteCategory(cat)} className="text-red-500 hover:text-red-700">
-                          <Trash2 size={16} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-               </div>
+          <div className="space-y-8 animate-in fade-in duration-300">
+             <h1 className="text-3xl font-black text-primary-900">Shop Taxonomy</h1>
+             <div className="grid grid-cols-2 gap-8">
+                <div className="bg-white p-8 rounded-3xl shadow-sm border border-primary-50">
+                   <h3 className="font-black mb-6">Create New Category</h3>
+                   <input className="w-full p-3 border rounded-xl mb-4 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="e.g. Electronics" id="catInput" />
+                   <button onClick={() => { const el = document.getElementById('catInput') as any; if(el.value) props.onAddCategory(el.value); el.value = ''; }} className="w-full bg-primary-600 text-white font-bold py-3 rounded-xl hover:bg-primary-700 transition-colors">Add Category</button>
+                </div>
+                <div className="space-y-2">
+                  {props.categories.map(c => (
+                    <div key={c} className="bg-white p-4 rounded-2xl border border-primary-50 flex justify-between items-center hover:shadow-sm transition-shadow">
+                       <span className="font-bold">{c}</span>
+                       <button onClick={() => props.onDeleteCategory(c)} className="text-red-400 hover:text-red-600 p-2"><Trash2 size={16}/></button>
+                    </div>
+                  ))}
+                </div>
              </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

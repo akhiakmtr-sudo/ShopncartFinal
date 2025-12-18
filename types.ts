@@ -1,15 +1,10 @@
+
 export enum ProductCategory {
-  MobilesComputers = 'Mobiles, Computers',
-  TVAppliancesElectronics = 'TV, Appliances, Electronics',
-  MensFashion = "Men's Fashion",
-  WomensFashion = "Women's Fashion",
-  HomeKitchenPets = 'Home, Kitchen, Pets',
-  BeautyHealthGrocery = 'Beauty, Health, Grocery',
-  SportsFitnessBags = 'Sports, Fitness, Bags, Luggage',
-  ToysBabyKids = "Toys, Baby Products, Kids' Fashion",
-  CarMotorbikeIndustrial = 'Car, Motorbike, Industrial',
-  Books = 'Books',
-  MoviesMusicGames = 'Movies, Music & Video Games'
+  HerbalSupplements = 'Herbal Supplements',
+  EssentialOils = 'Essential Oils',
+  OrganicTeas = 'Organic Teas',
+  Skincare = 'Natural Skincare',
+  WellnessKits = 'Wellness Kits'
 }
 
 export interface Review {
@@ -31,7 +26,9 @@ export interface Manufacturer {
 export interface Product {
   id: string;
   name: string;
+  brand: string;
   price: number;
+  mrp: number;
   category: string;
   images: string[];
   description: string;
@@ -61,9 +58,22 @@ export interface User {
 
 export interface Order {
   id: string;
+  userId?: string;
   customerName: string;
   items: CartItem[];
   total: number;
-  status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered';
+  status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Return Requested' | 'Refunded' | 'Return Rejected';
   date: string;
+  returnReason?: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  userId: string;
+  userName: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: 'Open' | 'Resolved';
+  createdAt: string;
 }
