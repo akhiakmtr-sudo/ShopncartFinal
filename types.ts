@@ -1,9 +1,13 @@
 export enum ProductCategory {
-  Skincare = 'Skincare',
-  PainRelief = 'Pain Relief',
-  Haircare = 'Haircare',
-  Weightloss = 'Weightloss',
-  Other = 'Other'
+  Fashion = 'Fashion',
+  Electronics = 'Electronics',
+  Mobiles = 'Mobiles',
+  Beauty = 'Beauty',
+  Furniture = 'Furniture',
+  HomeAppliances = 'Home Appliances',
+  Sports = 'Sports',
+  Toys = 'Toys',
+  Automobiles = 'Automobiles'
 }
 
 export interface Review {
@@ -27,7 +31,7 @@ export interface Product {
   name: string;
   price: number;
   category: string;
-  images: string[]; // Changed from single image to array of 5 images
+  images: string[];
   description: string;
   howToUse: string;
   manufacturer: Manufacturer;
@@ -38,7 +42,7 @@ export interface Product {
 
 export interface CartItem extends Product {
   quantity: number;
-  image: string; // Keep a single main image for cart display
+  image: string;
 }
 
 export interface ChatMessage {
