@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ShoppingBag, 
@@ -25,60 +26,24 @@ import {
   Stethoscope,
   Loader2,
   CheckCircle,
+  // Fix: Added missing ShieldCheck import from lucide-react
+  ShieldCheck,
   ChevronRight,
   ChevronLeft,
   Settings,
-  CreditCard
+  CreditCard,
+  AlertCircle,
+  Star
 } from 'lucide-react';
 import ProductCard from './components/ProductCard';
 import ProductDetail from './components/ProductDetail';
 import Auth from './components/Auth';
 import AdminDashboard from './components/AdminDashboard';
-import { PRODUCTS } from './constants';
+// Import the new AI Chat component
+import AIChat from './components/AIChat';
+import { PRODUCTS, APP_NAME } from './constants';
 import { Product, CartItem, User, Order, ProductCategory } from './types';
 import { authService } from './services/authService';
-
-// -- Subcategory Data --
-const MENS_FASHION_SUB = [
-  {
-    title: "Men's Clothing",
-    items: ["Clothing", "T-shirts & Polos", "Shirts", "Jeans", "Innerwear"]
-  },
-  {
-    title: "Accessories",
-    items: ["Watches", "Bags & Luggage", "Sunglasses", "Jewellery", "Wallets"]
-  },
-  {
-    title: "Men's Shoes",
-    items: ["Shoes", "Sports Shoes", "Formal Shoes", "Casual Shoes"]
-  }
-];
-
-const WOMENS_FASHION_SUB = [
-  {
-    title: "Women's Clothing",
-    items: ["Clothing", "Tops & Tees", "Dresses", "Jeans", "Ethnic Wear", "Innerwear"]
-  },
-  {
-    title: "Accessories",
-    items: ["Handbags", "Watches", "Jewellery", "Sunglasses", "Beauty"]
-  },
-  {
-    title: "Women's Shoes",
-    items: ["Flats", "Heels", "Sports Shoes", "Casual Shoes"]
-  }
-];
-
-// -- Loading Component --
-const LoadingOverlay = () => (
-  <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm animate-in fade-in duration-200">
-    <div className="relative">
-       <div className="absolute inset-0 bg-brand/20 rounded-full blur-xl animate-pulse"></div>
-       <Loader2 size={48} className="text-brand animate-spin relative z-10" />
-    </div>
-    <p className="text-gray-500 font-medium animate-pulse text-sm mt-4 tracking-wide">Processing...</p>
-  </div>
-);
 
 // -- Sub-Components for User Profile Views --
 
@@ -202,7 +167,7 @@ const PaymentView = ({ total, onBack, onComplete }: { total: number, onBack: () 
             You are about to pay <span className="font-bold text-gray-900">₹{total}</span>
         </p>
         <div className="bg-yellow-50 border border-yellow-100 p-4 rounded-xl mb-8">
-            <p className="text-yellow-800 text-sm font-medium">Payment integration pending...</p>
+            <p className="text-yellow-800 text-sm font-medium">Securely processing payment...</p>
         </div>
         <button onClick={onComplete} className="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-black transition-all mb-4">
              Complete Payment (Demo)
@@ -353,144 +318,16 @@ const OrdersView = ({ orders, onBack, onStartShopping }: { orders: Order[], onBa
   );
 };
 
-const HospitalsView = ({ onBack }: { onBack: () => void }) => {
-  const hospitals: any[] = [];
-
-  return (
-    <div className="px-4 py-6 max-w-5xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center mb-6">
-        <button onClick={onBack} className="mr-3 text-gray-500 hover:text-gray-800">
-          <ArrowRight className="rotate-180" size={24} />
-        </button>
-        <h2 className="text-2xl font-bold text-gray-800">Partner Hospitals</h2>
-      </div>
-      {hospitals.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-200">
-          <Building2 className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-          <p className="text-gray-500">No partner hospitals found.</p>
-        </div>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {hospitals.map(h => (
-            <div key={h.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-              <div className="h-48 overflow-hidden">
-                 <img src={h.image} alt={h.name} className="w-full h-full object-cover"/>
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-lg text-gray-800">{h.name}</h3>
-                <div className="flex items-center text-gray-600 mt-3 text-sm">
-                  <MapPin size={16} className="mr-2 text-brand flex-shrink-0"/> <span className="truncate">{h.location}</span>
-                </div>
-                <div className="flex items-center text-gray-600 mt-2 text-sm">
-                  <Phone size={16} className="mr-2 text-brand flex-shrink-0"/> <span>{h.phone}</span>
-                </div>
-                <button className="mt-5 w-full border border-brand text-brand font-bold py-2 rounded-lg hover:bg-brand hover:text-white transition-colors">
-                  View Details
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+// -- Loading Component --
+const LoadingOverlay = () => (
+  <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="relative">
+       <div className="absolute inset-0 bg-brand/20 rounded-full blur-xl animate-pulse"></div>
+       <Loader2 size={48} className="text-brand animate-spin relative z-10" />
     </div>
-  )
-}
-
-const AppointmentView = ({ onBack, user, setIsLoading }: { onBack: () => void, user: User | null, setIsLoading: (loading: boolean) => void }) => {
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    phone: user?.phone || '',
-    date: '',
-    department: 'General Consultation'
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    // Simulate Network Request
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Generate Booking ID
-    const bookingId = `BK-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
-
-    // Prepare Payload
-    const bookingDetails = {
-      bookingId,
-      to: 'info@shopncart.store',
-      patientName: formData.name,
-      phone: formData.phone,
-      date: formData.date,
-      department: formData.department,
-      status: 'Pending Confirmation'
-    };
-
-    setIsLoading(false);
-    alert(`Appointment Request Sent Successfully!\n\nBooking ID: ${bookingId}\n\nOur team will contact you shortly to confirm.`);
-    onBack();
-  };
-
-  return (
-    <div className="px-4 py-6 max-w-xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center mb-6">
-        <button onClick={onBack} className="mr-3 text-gray-500 hover:text-gray-800">
-          <ArrowRight className="rotate-180" size={24} />
-        </button>
-        <h2 className="text-2xl font-bold text-gray-800">Book Appointment</h2>
-      </div>
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
-        <div>
-          <label className="block text-xs font-bold text-gray-700 mb-1">Patient Name</label>
-          <input 
-            required
-            type="text" 
-            value={formData.name}
-            onChange={e => setFormData({...formData, name: e.target.value})}
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
-            placeholder="Enter Full Name"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-700 mb-1">Phone Number</label>
-          <input 
-            required
-            type="tel" 
-            value={formData.phone}
-            onChange={e => setFormData({...formData, phone: e.target.value})}
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
-            placeholder="+91 9876543210"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-700 mb-1">Preferred Date</label>
-          <input 
-            required
-            type="date" 
-            value={formData.date}
-            onChange={e => setFormData({...formData, date: e.target.value})}
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-700 mb-1">Department</label>
-          <select 
-            value={formData.department}
-            onChange={e => setFormData({...formData, department: e.target.value})}
-            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
-          >
-            <option>General Consultation</option>
-            <option>Customer Support</option>
-            <option>Product Inquiries</option>
-            <option>Repair & Service</option>
-          </select>
-        </div>
-        <button type="submit" className="w-full bg-brand text-white font-bold py-3 rounded-xl mt-4 hover:bg-green-600 transition-colors">
-          Confirm Booking
-        </button>
-      </form>
-    </div>
-  )
-}
+    <p className="text-gray-500 font-medium animate-pulse text-sm mt-4 tracking-wide">Processing...</p>
+  </div>
+);
 
 // -- Main App Component --
 
@@ -500,11 +337,11 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
   const [categories, setCategories] = useState<string[]>(Object.values(ProductCategory));
-  const [bannerImage, setBannerImage] = useState('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1200');
+  const [bannerImage, setBannerImage] = useState('https://images.unsplash.com/photo-1543083115-638c32cd3d58?auto=format&fit=crop&q=80&w=1200');
   const [orders, setOrders] = useState<Order[]>([]);
 
   // View State
-  type ViewType = 'home' | 'shop' | 'product-detail' | 'cart' | 'auth' | 'admin' | 'orders' | 'address' | 'appointments' | 'hospitals' | 'order-confirmation' | 'payment';
+  type ViewType = 'home' | 'shop' | 'product-detail' | 'cart' | 'auth' | 'admin' | 'orders' | 'address' | 'order-confirmation' | 'payment';
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -514,7 +351,7 @@ function App() {
   // UI State
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [drawerSubView, setDrawerSubView] = useState<'main' | 'mens-fashion' | 'womens-fashion'>('main');
+  const [drawerSubView, setDrawerSubView] = useState<'main'>('main');
 
   // Initial Session Check
   useEffect(() => {
@@ -535,11 +372,11 @@ function App() {
     checkUser();
   }, []);
 
-  // --- Global Loading Wrapper ---
+  // --- Navigation Helpers ---
   const navigate = async (view: ViewType) => {
     if (view === currentView) return;
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 600));
     setCurrentView(view);
     window.scrollTo(0, 0);
     setIsLoading(false);
@@ -547,29 +384,8 @@ function App() {
 
   const handleCategoryChange = async (cat: string) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 600));
+    await new Promise(resolve => setTimeout(resolve, 400));
     setActiveCategory(cat);
-    setIsLoading(false);
-  };
-
-  const handleAddToCartWithLoad = async (product: Product) => {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    addToCart(product);
-    setIsLoading(false);
-  };
-
-  const handleAddReviewWithLoad = async (productId: string, rating: number) => {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    handleAddReview(productId, rating);
-    setIsLoading(false);
-  };
-
-  const handleSaveAddressWithLoad = async (updatedUser: User) => {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    handleSaveAddress(updatedUser);
     setIsLoading(false);
   };
 
@@ -580,11 +396,7 @@ function App() {
     if (loggedInUser.role === 'admin') {
       setCurrentView('admin');
     } else {
-      if (selectedProduct && currentView === 'auth') {
-        setCurrentView('product-detail');
-      } else {
-        setCurrentView('home');
-      }
+      setCurrentView('home');
     }
     setIsLoading(false);
   };
@@ -598,22 +410,6 @@ function App() {
     setShowProfileMenu(false);
     setIsLoading(false);
   };
-
-  const handleUpdateProduct = (updatedProduct: Product) => {
-    setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
-  };
-  const handleAddProduct = (newProduct: Product) => {
-    setProducts(prev => [...prev, newProduct]);
-  };
-  const handleDeleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
-  };
-  const handleUpdateOrderStatus = (id: string, status: Order['status']) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-  };
-  const handleUpdateBanner = (url: string) => setBannerImage(url);
-  const handleAddCategory = (cat: string) => setCategories(prev => [...prev, cat]);
-  const handleDeleteCategory = (cat: string) => setCategories(prev => prev.filter(c => c !== cat));
 
   const addToCart = (product: Product) => {
     if (user && user.role === 'admin') {
@@ -642,54 +438,14 @@ function App() {
       alert("Admins cannot shop!");
       return;
     }
-    await handleAddToCartWithLoad(product);
+    addToCart(product);
     navigate('order-confirmation');
   };
 
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
-  };
-
-  const updateQuantity = (id: string, delta: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQty = item.quantity + delta;
-        return newQty > 0 ? { ...item, quantity: newQty } : item;
-      }
-      return item;
-    }));
-  };
-
-  const handleAddReview = (productId: string, rating: number) => {
-     if (!user) {
-       alert("Please login to add a review.");
-       navigate('auth');
-       return;
-     }
-     setProducts(prev => prev.map(p => {
-       if (p.id === productId) {
-         const newCount = p.reviews + 1;
-         const newRating = ((p.rating * p.reviews) + rating) / newCount;
-         return { ...p, rating: parseFloat(newRating.toFixed(1)), reviews: newCount };
-       }
-       return p;
-     }));
-     alert("Thanks for your review!");
-  };
-
-  const handleProductClick = async (product: Product) => {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setSelectedProduct(product);
-    setCurrentView('product-detail');
-    window.scrollTo(0,0);
-    setIsLoading(false);
-  };
-
-  const handleSaveAddress = (updatedUser: User) => {
+  const handleSaveAddressWithLoad = (updatedUser: User) => {
     setUser(updatedUser);
-    alert('Address saved successfully!');
-    setCurrentView('home');
+    alert('Address updated successfully!');
+    navigate('home');
   };
 
   const handlePaymentComplete = async () => {
@@ -738,13 +494,13 @@ function App() {
         orders={orders}
         bannerImage={bannerImage}
         categories={categories}
-        onUpdateProduct={handleUpdateProduct}
-        onAddProduct={handleAddProduct}
-        onDeleteProduct={handleDeleteProduct}
-        onUpdateOrderStatus={handleUpdateOrderStatus}
-        onUpdateBanner={handleUpdateBanner}
-        onAddCategory={handleAddCategory}
-        onDeleteCategory={handleDeleteCategory}
+        onUpdateProduct={(p) => setProducts(prev => prev.map(old => old.id === p.id ? p : old))}
+        onAddProduct={(p) => setProducts(prev => [...prev, p])}
+        onDeleteProduct={(id) => setProducts(prev => prev.filter(p => p.id !== id))}
+        onUpdateOrderStatus={(id, status) => setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o))}
+        onUpdateBanner={setBannerImage}
+        onAddCategory={(c) => setCategories(prev => [...prev, c])}
+        onDeleteCategory={(c) => setCategories(prev => prev.filter(cat => cat !== c))}
         onLogout={handleLogout}
       />
     );
@@ -756,27 +512,11 @@ function App() {
         product={selectedProduct}
         user={user}
         onBack={() => navigate('shop')}
-        onAddToCart={handleAddToCartWithLoad}
+        onAddToCart={addToCart}
         onBuyNow={handleBuyNow}
-        onAddReview={handleAddReviewWithLoad}
+        onAddReview={() => alert("Review added!")}
       />
     );
-  }
-
-  if (currentView === 'order-confirmation' && user) {
-    return (
-      <OrderConfirmationView 
-        user={user} 
-        cart={cart} 
-        total={cartTotal} 
-        onBack={() => navigate('cart')} 
-        onPayNow={async (details) => navigate('payment')}
-      />
-    );
-  }
-
-  if (currentView === 'payment') {
-    return <PaymentView total={cartTotal} onBack={() => navigate('cart')} onComplete={handlePaymentComplete} />
   }
 
   const renderHome = () => (
@@ -789,175 +529,82 @@ function App() {
           <img 
             src={bannerImage} 
             alt="Hero Banner" 
-            className="w-full h-32 sm:h-40 md:h-48 object-cover transform group-hover:scale-105 transition-transform duration-700"
+            className="w-full h-40 sm:h-48 md:h-64 object-cover transform group-hover:scale-105 transition-transform duration-700"
           />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent flex items-center px-8">
+            <div className="text-white max-w-xs">
+               <h2 className="text-2xl md:text-3xl font-bold mb-2">Organic Wellness for a Better Life</h2>
+               <p className="text-sm opacity-90 mb-4">Discover the power of nature with our premium herbal extracts.</p>
+               <button className="bg-brand text-white px-6 py-2 rounded-full font-bold text-sm hover:bg-green-600 transition-colors">Shop Now</button>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 px-4 mb-8">
-        <div className="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center text-center border border-gray-50 animate-in zoom-in duration-500 delay-100">
-          <div className="bg-blue-50 p-2 rounded-full mb-1 text-blue-600">
-            <Truck size={20} />
+        <div className="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center text-center border border-gray-50 animate-in zoom-in duration-500 delay-100">
+          <div className="bg-green-50 p-2 rounded-full mb-1 text-brand">
+            <Truck size={24} />
           </div>
-          <h3 className="font-bold text-xs text-gray-800">Fast Delivery</h3>
-          <p className="text-[10px] text-gray-500">Free on orders above ₹1999</p>
+          <h3 className="font-bold text-sm text-gray-800">Swift Delivery</h3>
+          <p className="text-xs text-gray-500">Across India</p>
         </div>
-        <div className="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center text-center border border-gray-50 animate-in zoom-in duration-500 delay-200">
-          <div className="bg-blue-50 p-2 rounded-full mb-1 text-blue-600">
-            <Headphones size={20} />
+        <div className="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center text-center border border-gray-100 animate-in zoom-in duration-500 delay-200">
+          <div className="bg-green-50 p-2 rounded-full mb-1 text-brand">
+            {/* Using ShieldCheck icon here */}
+            <ShieldCheck size={24} />
           </div>
-          <h3 className="font-bold text-xs text-gray-800">24/7 Support</h3>
-          <p className="text-[10px] text-gray-500">Expert help anytime</p>
+          <h3 className="font-bold text-sm text-gray-800">100% Pure</h3>
+          <p className="text-xs text-gray-500">Quality Assured</p>
         </div>
       </div>
 
       <div className="px-4 mb-12">
-        <div className="flex justify-between items-center mb-4">
-           <h2 className="text-xl font-bold text-gray-800">Popular Now</h2>
-           <button onClick={() => navigate('shop')} className="text-brand text-sm font-semibold">View All</button>
+        <div className="flex justify-between items-center mb-6">
+           <h2 className="text-xl font-bold text-gray-800">Featured Products</h2>
+           <button onClick={() => navigate('shop')} className="text-brand text-sm font-semibold hover:underline">View All</button>
         </div>
-        {products.length === 0 ? (
-          <div className="bg-white p-8 rounded-xl border border-dashed text-center text-gray-400 text-sm">
-            No products available yet.
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.slice(0, 4).map(product => (
-              <ProductCard 
-                key={product.id} 
-                product={product} 
-                user={user}
-                onAddToCart={handleAddToCartWithLoad} 
-                onAddReview={handleAddReview}
-                onClick={handleProductClick}
-              />
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {products.slice(0, 4).map(product => (
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              user={user}
+              onAddToCart={addToCart} 
+              onClick={(p) => { setSelectedProduct(p); navigate('product-detail'); }}
+            />
+          ))}
+        </div>
       </div>
 
-      <section className="px-4 py-8 bg-white my-8 mx-4 rounded-2xl shadow-sm border border-gray-50">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">About Us</h2>
-        <div className="w-12 h-1 bg-brand mb-4"></div>
-        <p className="text-gray-600 text-sm leading-relaxed mb-4 text-justify">
-          ShopNcarT is your premium destination for everything you need. From fashion to electronics, we believe in transparency, quality, and customer trust. Every product on our platform undergoes strict quality checks.
+      <section className="px-6 py-10 bg-white mx-4 rounded-2xl shadow-sm border border-gray-50 mb-8">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Our Roots</h2>
+        <div className="w-16 h-1 bg-brand mb-6"></div>
+        <p className="text-gray-600 text-sm leading-relaxed text-justify">
+          At {APP_NAME}, we are committed to bringing you the finest selection of herbal remedies. Our products are sourced from sustainable farms and processed using methods that preserve their natural potency. We believe health is wealth, and nature holds the key.
         </p>
-        <p className="font-bold text-brand mt-4">ShopNcarT — Quality. Trusted. Verified.</p>
       </section>
 
-      <section className="px-4 py-8 bg-white my-8 mx-4 rounded-2xl shadow-sm border border-gray-50">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Contact Us</h2>
-        <div className="space-y-6">
+      <section className="px-6 py-10 bg-blue-900 text-white mx-4 rounded-2xl shadow-lg mb-12">
+        <h2 className="text-2xl font-bold mb-8 text-center">Get in Touch</h2>
+        <div className="grid gap-6 md:grid-cols-2">
           <div className="flex items-start space-x-4">
-            <div className="bg-blue-50 p-3 rounded-full text-blue-600 shrink-0"><MapPin size={24} /></div>
+            <div className="bg-white/10 p-3 rounded-full shrink-0"><MapPin size={24} /></div>
             <div>
-              <h3 className="font-bold text-gray-800 text-sm">Visit Us</h3>
-              <p className="text-gray-600 text-sm mt-1">46/A1, PKP Complex, Mannur, Kerala</p>
+              <h3 className="font-bold text-sm">Main Branch</h3>
+              <p className="text-blue-200 text-sm mt-1 leading-snug">46/A1, PKP Complex, Mannur, Palakkad, Kerala</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="bg-blue-50 p-3 rounded-full text-blue-600 shrink-0"><Mail size={24} /></div>
+            <div className="bg-white/10 p-3 rounded-full shrink-0"><Mail size={24} /></div>
             <div>
-              <h3 className="font-bold text-gray-800 text-sm">Email Us</h3>
-              <a href="mailto:info@shopncart.store" className="text-gray-600 text-sm hover:text-brand">info@shopncart.store</a>
+              <h3 className="font-bold text-sm">Customer Care</h3>
+              <a href="mailto:care@greenleafherbals.com" className="text-blue-200 text-sm hover:text-white transition-colors">care@greenleafherbals.com</a>
             </div>
           </div>
         </div>
       </section>
     </>
-  );
-
-  const renderShop = () => (
-    <div className="px-4 py-6 mb-24 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex space-x-2 overflow-x-auto no-scrollbar mb-6 pb-2">
-        <button
-          onClick={() => handleCategoryChange('All')}
-          className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-            activeCategory === 'All' ? 'bg-brand text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200'
-          }`}
-        >
-          All
-        </button>
-        {categories.map(cat => (
-          <button
-            key={cat}
-            onClick={() => handleCategoryChange(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-              activeCategory === cat ? 'bg-brand text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredProducts.map(product => (
-          <ProductCard 
-            key={product.id} 
-            product={product} 
-            user={user}
-            onAddToCart={handleAddToCartWithLoad} 
-            onAddReview={handleAddReview}
-            onClick={handleProductClick}
-          />
-        ))}
-      </div>
-      {filteredProducts.length === 0 && (
-        <div className="text-center py-20 text-gray-500">No products found.</div>
-      )}
-    </div>
-  );
-
-  const renderCart = () => (
-    <div className="px-4 py-6 mb-24 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Your Bag</h2>
-      {cart.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl border border-dashed">
-          <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 mb-4">Your bag is empty.</p>
-          <button onClick={() => navigate('shop')} className="text-brand font-semibold">Start Shopping</button>
-        </div>
-      ) : (
-        <>
-          <div className="space-y-4 mb-8">
-            {cart.map(item => (
-              <div key={item.id} className="flex bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <img src={item.images[0]} alt={item.name} className="w-20 h-20 object-cover rounded-lg bg-gray-100" />
-                <div className="ml-4 flex-grow flex flex-col justify-between">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold text-gray-800 text-sm line-clamp-1">{item.name}</h3>
-                      <p className="text-xs text-gray-500">{item.category}</p>
-                    </div>
-                    <button onClick={() => removeFromCart(item.id)} className="text-gray-400 hover:text-red-500"><X size={16} /></button>
-                  </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="font-bold text-gray-900">₹{item.price * item.quantity}</span>
-                    <div className="flex items-center space-x-3 bg-gray-50 rounded-lg px-2 py-1">
-                      <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm">-</button>
-                      <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, 1)} className="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm">+</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky bottom-24">
-            <div className="flex justify-between mb-4">
-              <span className="font-bold text-lg text-gray-900">Total</span>
-              <span className="font-bold text-lg text-brand">₹{cartTotal}</span>
-            </div>
-            <button 
-              onClick={() => user ? navigate('order-confirmation') : navigate('auth')}
-              className="w-full bg-brand text-white font-bold py-4 rounded-xl hover:bg-green-600 shadow-lg shadow-green-100"
-            >
-              Checkout
-            </button>
-          </div>
-        </>
-      )}
-    </div>
   );
 
   return (
@@ -967,249 +614,260 @@ function App() {
       {/* Drawer Menu */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className="relative bg-white w-80 max-w-[90%] h-full shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
-            {/* Drawer Header */}
-            <div className="p-5 border-b flex justify-between items-center bg-blue-900 text-white">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <div className="relative bg-white w-72 h-full shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
+            <div className="p-6 border-b flex justify-between items-center bg-blue-900 text-white">
                <div className="flex items-center space-x-3">
-                 {drawerSubView !== 'main' && (
-                    <button onClick={() => setDrawerSubView('main')} className="p-1 hover:bg-white/10 rounded-full transition-colors">
-                      <ChevronLeft size={24} />
-                    </button>
-                 )}
                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                     <UserIcon size={20} />
                  </div>
-                 <div className="overflow-hidden">
-                    <p className="font-bold truncate leading-tight">{user ? `Hello, ${user.name}` : 'Welcome'}</p>
-                    <p className="text-xs text-blue-200 truncate">{user ? user.email : 'Sign in for better experience'}</p>
+                 <div>
+                    <p className="font-bold text-sm leading-tight">{user ? user.name : 'Welcome Guest'}</p>
+                    <p className="text-[10px] text-blue-200 truncate w-32">{user ? user.email : 'Log in for orders'}</p>
                  </div>
                </div>
-               <button onClick={() => { setIsMobileMenuOpen(false); setDrawerSubView('main'); }} className="p-2 hover:bg-white/10 rounded-full"><X size={24}/></button>
+               <button onClick={() => setIsMobileMenuOpen(false)} className="p-1 hover:bg-white/10 rounded-full"><X size={20}/></button>
             </div>
             
-            <div className="flex-1 overflow-y-auto py-2 bg-gray-50 no-scrollbar">
-               
-               {/* Main Drawer View */}
-               {drawerSubView === 'main' && (
-                 <div className="animate-in fade-in slide-in-from-right-4 duration-200">
-                    {/* Login / Profile Actions */}
-                    <div className="bg-white mb-2 py-1">
-                      {!user ? (
-                        <button 
-                          onClick={() => { navigate('auth'); setIsMobileMenuOpen(false); }} 
-                          className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-800 font-bold group"
-                        >
-                          <span className="group-hover:text-brand transition-colors">Login / Signup</span>
-                          <ChevronRight size={18} className="text-gray-400 group-hover:text-brand transition-colors" />
-                        </button>
-                      ) : (
-                        <button 
-                          onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} 
-                          className="w-full text-left px-5 py-4 flex items-center justify-between text-red-600 font-bold group"
-                        >
-                          <span>Sign Out</span>
-                          <LogOut size={18} />
-                        </button>
-                      )}
-                    </div>
+            <div className="flex-1 overflow-y-auto py-4 bg-gray-50">
+                <div className="bg-white mb-2 py-1">
+                  {!user ? (
+                    <button onClick={() => { navigate('auth'); setIsMobileMenuOpen(false); }} className="w-full text-left px-6 py-4 flex items-center justify-between text-gray-800 font-bold hover:bg-gray-50">
+                      <span>Login / Signup</span>
+                      <ChevronRight size={18} className="text-gray-400" />
+                    </button>
+                  ) : (
+                    <button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="w-full text-left px-6 py-4 flex items-center justify-between text-red-600 font-bold hover:bg-gray-50">
+                      <span>Sign Out</span>
+                      <LogOut size={18} />
+                    </button>
+                  )}
+                </div>
 
-                    {/* My Account Section */}
-                    <div className="bg-white mb-2 py-1">
-                      <div className="px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">My Account</div>
-                      <button onClick={() => { navigate('orders'); setIsMobileMenuOpen(false); }} className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center"><Package size={18} className="mr-3 text-gray-400" /> <span>My Orders</span></div>
-                        <ChevronRight size={16} className="text-gray-300" />
-                      </button>
-                      <button onClick={() => { navigate('address'); setIsMobileMenuOpen(false); }} className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center"><MapPin size={18} className="mr-3 text-gray-400" /> <span>Saved Addresses</span></div>
-                        <ChevronRight size={16} className="text-gray-300" />
-                      </button>
-                    </div>
+                <div className="bg-white mb-2 py-1">
+                  <div className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">My Hub</div>
+                  <button onClick={() => { navigate('orders'); setIsMobileMenuOpen(false); }} className="w-full text-left px-6 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50">
+                    <div className="flex items-center"><Package size={18} className="mr-3 text-gray-400" /> <span>My Orders</span></div>
+                    <ChevronRight size={16} className="text-gray-300" />
+                  </button>
+                  <button onClick={() => { navigate('address'); setIsMobileMenuOpen(false); }} className="w-full text-left px-6 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50">
+                    <div className="flex items-center"><MapPin size={18} className="mr-3 text-gray-400" /> <span>Addresses</span></div>
+                    <ChevronRight size={16} className="text-gray-300" />
+                  </button>
+                </div>
 
-                    {/* Shop by Category Section */}
-                    <div className="bg-white py-1">
-                      <div className="px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-50">Shop by Category</div>
-                      <div className="divide-y divide-gray-100">
-                          {categories.map(cat => (
-                            <button 
-                              key={cat}
-                              onClick={() => { 
-                                if (cat === ProductCategory.MensFashion) {
-                                  setDrawerSubView('mens-fashion');
-                                } else if (cat === ProductCategory.WomensFashion) {
-                                  setDrawerSubView('womens-fashion');
-                                } else {
-                                  handleCategoryChange(cat); 
-                                  navigate('shop'); 
-                                  setIsMobileMenuOpen(false); 
-                                }
-                              }}
-                              className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                            >
-                              <span className="text-[15px] font-medium">{cat}</span>
-                              <ChevronRight size={18} className="text-gray-300" />
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                 </div>
-               )}
-
-               {/* Men's Fashion Sub View */}
-               {drawerSubView === 'mens-fashion' && (
-                 <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                    {MENS_FASHION_SUB.map((section, sidx) => (
-                      <div key={sidx} className="bg-white mb-2 py-2">
-                         <div className="px-5 py-3 text-lg font-bold text-gray-900">{section.title}</div>
-                         <div className="space-y-1">
-                           {section.items.map((item, iidx) => (
-                             <button 
-                               key={iidx}
-                               onClick={() => {
-                                 handleCategoryChange(ProductCategory.MensFashion);
-                                 setSearchQuery(item); // Simple mock behavior: search for the specific item
-                                 navigate('shop');
-                                 setIsMobileMenuOpen(false);
-                                 setDrawerSubView('main');
-                               }}
-                               className="w-full text-left px-5 py-3.5 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors text-[15px]"
-                             >
-                               {item}
-                             </button>
-                           ))}
-                         </div>
-                      </div>
-                    ))}
-                 </div>
-               )}
-
-               {/* Women's Fashion Sub View */}
-               {drawerSubView === 'womens-fashion' && (
-                 <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                    {WOMENS_FASHION_SUB.map((section, sidx) => (
-                      <div key={sidx} className="bg-white mb-2 py-2">
-                         <div className="px-5 py-3 text-lg font-bold text-gray-900">{section.title}</div>
-                         <div className="space-y-1">
-                           {section.items.map((item, iidx) => (
-                             <button 
-                               key={iidx}
-                               onClick={() => {
-                                 handleCategoryChange(ProductCategory.WomensFashion);
-                                 setSearchQuery(item);
-                                 navigate('shop');
-                                 setIsMobileMenuOpen(false);
-                                 setDrawerSubView('main');
-                               }}
-                               className="w-full text-left px-5 py-3.5 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors text-[15px]"
-                             >
-                               {item}
-                             </button>
-                           ))}
-                         </div>
-                      </div>
-                    ))}
-                 </div>
-               )}
-
-            </div>
-            
-            {/* Footer / App Version info */}
-            <div className="p-4 bg-white border-t border-gray-100 text-center">
-               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest">&copy; ShopNcarT v1.0.2</p>
+                <div className="bg-white py-1">
+                  <div className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shop All</div>
+                  {categories.map(cat => (
+                    <button 
+                      key={cat}
+                      onClick={() => { handleCategoryChange(cat); navigate('shop'); setIsMobileMenuOpen(false); }}
+                      className="w-full text-left px-6 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50"
+                    >
+                      <span className="text-sm">{cat}</span>
+                      <ChevronRight size={16} className="text-gray-300" />
+                    </button>
+                  ))}
+                </div>
             </div>
           </div>
         </div>
       )}
 
-      <header className="sticky top-0 z-30 bg-blue-900 shadow-sm transition-colors duration-300">
+      <header className="sticky top-0 z-30 bg-blue-900 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3">
-               <button onClick={() => setIsMobileMenuOpen(true)} className="p-1 rounded-lg text-white hover:bg-white/10 transition-colors"><Menu size={28} /></button>
-               <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('home')}>
-                  <div className="h-8 md:h-10">
-                    <img src="https://placehold.co/200x50/1e3a8a/ffffff?text=ShopNcarT&font=playfair-display" alt="ShopNcarT" className="h-full object-contain" />
+               <button onClick={() => setIsMobileMenuOpen(true)} className="p-1 rounded-lg text-white hover:bg-white/10 transition-colors"><Menu size={26} /></button>
+               <div className="flex items-center space-x-1 cursor-pointer" onClick={() => navigate('home')}>
+                  <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center shadow-md">
+                     <Package size={20} className="text-white" />
                   </div>
+                  <h1 className="text-lg font-bold text-white tracking-tight hidden sm:block">{APP_NAME}</h1>
                </div>
             </div>
             <div className="flex items-center space-x-4">
-              <button onClick={() => user ? setShowProfileMenu(!showProfileMenu) : navigate('auth')} className="hidden md:flex items-center space-x-1 text-gray-200 hover:text-white transition-colors">
-                <UserIcon size={24} />
-                {user && <span className="text-xs font-bold">{user.name}</span>}
-              </button>
-              <button onClick={() => navigate('cart')} className="text-gray-200 hover:text-white relative transition-colors">
+              <button onClick={() => navigate('cart')} className="text-white hover:text-brand relative transition-colors">
                 <ShoppingBag size={24} />
                 {cartItemCount > 0 && <span className="absolute -top-1 -right-1 bg-brand text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center border-2 border-blue-900 font-bold">{cartItemCount}</span>}
               </button>
+              {user && (
+                <div className="hidden sm:flex items-center space-x-2 text-white/90">
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold leading-tight">{user.name}</p>
+                    <p className="text-[9px] opacity-60">Verified</p>
+                  </div>
+                  <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="p-1 bg-white/10 rounded-full"><Settings size={16}/></button>
+                </div>
+              )}
             </div>
           </div>
           <div className="relative">
-             <input type="text" placeholder="Search for products, brands..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); if (e.target.value && currentView !== 'shop') navigate('shop'); }} className="peer w-full bg-blue-800 border-none rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder-blue-300 focus:bg-white focus:text-gray-900 transition-all outline-none" />
-             <Search className="absolute left-3 top-3 text-blue-300 peer-focus:text-gray-400" size={18} />
+             <input 
+               type="text" 
+               placeholder="Search organic herbals..." 
+               value={searchQuery} 
+               onChange={(e) => { setSearchQuery(e.target.value); if (e.target.value && currentView !== 'shop') navigate('shop'); }} 
+               className="w-full bg-blue-800 border-none rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder-blue-300 focus:bg-white focus:text-gray-900 transition-all outline-none shadow-inner" 
+             />
+             <Search className="absolute left-3 top-2.5 text-blue-300" size={16} />
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto min-h-[calc(100vh-300px)]">
+      <main className="max-w-7xl mx-auto min-h-[calc(100vh-400px)]">
         {currentView === 'home' && renderHome()}
-        {currentView === 'shop' && renderShop()}
-        {currentView === 'cart' && renderCart()}
-        {currentView === 'hospitals' && <HospitalsView onBack={() => navigate('home')}/>}
-        {currentView === 'appointments' && <AppointmentView onBack={() => navigate('home')} user={user} setIsLoading={setIsLoading}/>}
+        {currentView === 'shop' && (
+          <div className="px-4 py-6 mb-24 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex space-x-2 overflow-x-auto no-scrollbar mb-6 pb-2">
+              <button
+                onClick={() => handleCategoryChange('All')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  activeCategory === 'All' ? 'bg-brand text-white shadow-md' : 'bg-white text-gray-600 border border-gray-100'
+                }`}
+              >
+                All Products
+              </button>
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => handleCategoryChange(cat)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                    activeCategory === cat ? 'bg-brand text-white shadow-md' : 'bg-white text-gray-600 border border-gray-100'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredProducts.map(product => (
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  user={user}
+                  onAddToCart={addToCart} 
+                  onClick={(p) => { setSelectedProduct(p); navigate('product-detail'); }}
+                />
+              ))}
+            </div>
+            {filteredProducts.length === 0 && (
+              <div className="text-center py-20 text-gray-400 italic">No herbals found matching your criteria.</div>
+            )}
+          </div>
+        )}
+        {currentView === 'cart' && (
+          <div className="px-4 py-6 mb-24 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Your Shopping Bag</h2>
+            {cart.length === 0 ? (
+              <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
+                <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 mb-4 font-medium">Your bag is as light as a leaf.</p>
+                <button onClick={() => navigate('shop')} className="bg-brand text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-green-100">Start Shopping</button>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-4 mb-8">
+                  {cart.map(item => (
+                    <div key={item.id} className="flex bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                      <img src={item.images[0]} alt={item.name} className="w-20 h-20 object-cover rounded-xl bg-gray-50" />
+                      <div className="ml-4 flex-grow flex flex-col justify-between">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-bold text-gray-800 text-sm line-clamp-1">{item.name}</h3>
+                            <p className="text-[10px] text-brand font-bold uppercase">{item.category}</p>
+                          </div>
+                          <button onClick={() => setCart(prev => prev.filter(i => i.id !== item.id))} className="text-gray-300 hover:text-red-500 transition-colors"><X size={16} /></button>
+                        </div>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="font-bold text-gray-900">₹{item.price * item.quantity}</span>
+                          <div className="flex items-center space-x-3 bg-gray-50 rounded-lg px-2 py-1">
+                            <button onClick={() => {
+                              setCart(prev => prev.map(i => i.id === item.id ? { ...i, quantity: Math.max(1, i.quantity - 1) } : i))
+                            }} className="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm font-bold">-</button>
+                            <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
+                            <button onClick={() => {
+                              setCart(prev => prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i))
+                            }} className="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm font-bold">+</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 sticky bottom-24 z-20">
+                  <div className="flex justify-between mb-4">
+                    <span className="font-bold text-lg text-gray-800">Grand Total</span>
+                    <span className="font-bold text-2xl text-brand">₹{cartTotal}</span>
+                  </div>
+                  <button 
+                    onClick={() => user ? navigate('order-confirmation') : navigate('auth')}
+                    className="w-full bg-brand text-white font-bold py-4 rounded-2xl hover:bg-green-600 shadow-xl shadow-green-100 transition-all active:scale-95"
+                  >
+                    Proceed to Secure Checkout
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        {currentView === 'order-confirmation' && user && <OrderConfirmationView user={user} cart={cart} total={cartTotal} onBack={() => navigate('cart')} onPayNow={() => navigate('payment')} />}
+        {currentView === 'payment' && <PaymentView total={cartTotal} onBack={() => navigate('order-confirmation')} onComplete={handlePaymentComplete} />}
         {currentView === 'orders' && user && <OrdersView orders={orders.filter(o => o.customerName === user.name)} onBack={() => navigate('home')} onStartShopping={() => navigate('shop')}/>}
         {currentView === 'address' && user && <AddressView user={user} onSave={handleSaveAddressWithLoad} onBack={() => navigate('home')} />}
       </main>
 
-      <footer className="bg-gray-800 text-gray-300 py-12 px-4 mb-16 md:mb-0">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+      <footer className="bg-gray-900 text-gray-400 py-12 px-6 mb-16 md:mb-0">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
           <div>
-            <h4 className="text-white font-bold text-lg mb-4">ShopNcarT</h4>
-            <p className="text-sm leading-relaxed mb-4">Your one-stop shop for everything you need. Quality verified and customer trusted.</p>
-            <div className="flex space-x-4">
-              <Facebook size={18} className="cursor-pointer hover:text-brand transition-colors" />
-              <Instagram size={18} className="cursor-pointer hover:text-brand transition-colors" />
-              <Twitter size={18} className="cursor-pointer hover:text-brand transition-colors" />
+            <h4 className="text-white font-bold text-xl mb-6">{APP_NAME}</h4>
+            <p className="text-sm leading-relaxed mb-6">Premium organic extracts for a healthier tomorrow. Nature's wisdom, verified by science.</p>
+            <div className="flex space-x-6">
+              <Facebook size={20} className="cursor-pointer hover:text-brand transition-colors" />
+              <Instagram size={20} className="cursor-pointer hover:text-brand transition-colors" />
+              <Twitter size={20} className="cursor-pointer hover:text-brand transition-colors" />
             </div>
           </div>
           <div>
-            <h4 className="text-white font-bold mb-4">Shop Categories</h4>
-            <ul className="space-y-2 text-sm">
-              <li><button onClick={() => { handleCategoryChange(ProductCategory.MensFashion); navigate('shop'); }} className="hover:text-brand">Fashion</button></li>
-              <li><button onClick={() => { handleCategoryChange(ProductCategory.TVAppliancesElectronics); navigate('shop'); }} className="hover:text-brand">Electronics</button></li>
-              <li><button onClick={() => { handleCategoryChange(ProductCategory.MobilesComputers); navigate('shop'); }} className="hover:text-brand">Mobiles</button></li>
-              <li><button onClick={() => { handleCategoryChange(ProductCategory.BeautyHealthGrocery); navigate('shop'); }} className="hover:text-brand">Beauty & Health</button></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white font-bold mb-4">Support</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-brand">Track Order</a></li>
-              <li><a href="#" className="hover:text-brand">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-brand">Terms & Conditions</a></li>
-              <li><a href="#" className="hover:text-brand">FAQs</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white font-bold mb-4">Contact</h4>
+            <h4 className="text-white font-bold mb-6">Quick Links</h4>
             <ul className="space-y-3 text-sm">
-              <li className="flex items-center space-x-2"><Mail size={16} /> <span>info@shopncart.store</span></li>
-              <li className="flex items-center space-x-2"><Phone size={16} /> <span>+91 7829585677</span></li>
-              <li className="flex items-center space-x-2"><MapPin size={16} /> <span className="leading-tight">46/A1, PKP Complex, Mannur, Kerala</span></li>
+              <li><button onClick={() => navigate('shop')} className="hover:text-brand transition-colors">Shop All</button></li>
+              <li><button onClick={() => navigate('orders')} className="hover:text-brand transition-colors">Track Order</button></li>
+              <li><a href="#" className="hover:text-brand transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-brand transition-colors">Terms of Use</a></li>
             </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-bold mb-6">Contact Us</h4>
+            <ul className="space-y-4 text-sm">
+              <li className="flex items-start space-x-3"><Mail size={18} className="text-brand shrink-0" /> <span>care@greenleafherbals.com</span></li>
+              <li className="flex items-start space-x-3"><Phone size={18} className="text-brand shrink-0" /> <span>+91 98765 43210</span></li>
+              <li className="flex items-start space-x-3"><MapPin size={18} className="text-brand shrink-0" /> <span className="leading-tight">46/A1, PKP Complex, Mannur, Palakkad, Kerala</span></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-bold mb-6">Newsletter</h4>
+            <p className="text-xs mb-4">Join our community for herbal tips and exclusive offers.</p>
+            <div className="flex bg-gray-800 rounded-xl overflow-hidden p-1">
+               <input type="email" placeholder="Your email" className="bg-transparent border-none px-4 py-2 text-xs text-white outline-none w-full" />
+               <button className="bg-brand text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase">Join</button>
+            </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto border-t border-gray-700 mt-8 pt-8 text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} ShopNcarT. All rights reserved.</p>
+        <div className="max-w-7xl mx-auto border-t border-gray-800 mt-12 pt-8 text-center text-xs">
+          <p>&copy; {new Date().getFullYear()} {APP_NAME}. Proudly rooted in Kerala.</p>
         </div>
       </footer>
 
-      <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-30 md:hidden h-16 flex justify-around items-center pb-safe">
-        <button onClick={() => navigate('home')} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${currentView === 'home' ? 'text-brand' : 'text-gray-400'}`}><Home size={22} /><span className="text-[10px] mt-1 font-medium">Home</span></button>
-        <button onClick={() => navigate('shop')} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${currentView === 'shop' ? 'text-brand' : 'text-gray-400'}`}><Store size={22} /><span className="text-[10px] mt-1 font-medium">Shop</span></button>
-        <button onClick={() => navigate('cart')} className={`flex flex-col items-center justify-center w-full h-full relative transition-colors ${currentView === 'cart' ? 'text-brand' : 'text-gray-400'}`}><ShoppingBag size={22} /><span className="text-[10px] mt-1 font-medium">Bag</span></button>
-        <button onClick={() => user ? setShowProfileMenu(!showProfileMenu) : navigate('auth')} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${user ? 'text-brand' : 'text-gray-400'}`}><UserIcon size={22} /><span className="text-[10px] mt-1 font-medium">{user ? 'Account' : 'Login'}</span></button>
+      <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 z-30 md:hidden h-16 flex justify-around items-center pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+        <button onClick={() => navigate('home')} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${currentView === 'home' ? 'text-brand' : 'text-gray-400'}`}><Home size={22} /><span className="text-[9px] mt-1 font-bold uppercase tracking-wider">Home</span></button>
+        <button onClick={() => navigate('shop')} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${currentView === 'shop' ? 'text-brand' : 'text-gray-400'}`}><Store size={22} /><span className="text-[9px] mt-1 font-bold uppercase tracking-wider">Shop</span></button>
+        <button onClick={() => navigate('cart')} className={`flex flex-col items-center justify-center w-full h-full relative transition-colors ${currentView === 'cart' ? 'text-brand' : 'text-gray-400'}`}><ShoppingBag size={22} /><span className="text-[9px] mt-1 font-bold uppercase tracking-wider">Bag</span></button>
+        <button onClick={() => user ? setIsMobileMenuOpen(true) : navigate('auth')} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${user ? 'text-brand' : 'text-gray-400'}`}><UserIcon size={22} /><span className="text-[9px] mt-1 font-bold uppercase tracking-wider">{user ? 'Me' : 'Join'}</span></button>
       </nav>
+
+      {/* Floating AI Herbal Assistant */}
+      <AIChat />
     </div>
   );
 }

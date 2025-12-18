@@ -12,12 +12,15 @@ import {
 } from 'aws-amplify/auth';
 import { User } from '../types';
 
-// Configuration placeholders. In a real project, these should be in environment variables.
+/**
+ * AWS COGNITO CONFIGURATION
+ * Connected to Green Leaf Herbals User Pool
+ */
 const awsConfig = {
   Auth: {
     Cognito: {
-      userPoolId: 'us-east-1_example', // Replace with real User Pool ID
-      userPoolClientId: 'example-client-id', // Replace with real Client ID
+      userPoolId: 'us-east-1_T2qB7n6By', 
+      userPoolClientId: '10014e9s15qp3n3qld0ug2sf1h', 
       loginWith: {
         email: true
       }
@@ -42,7 +45,8 @@ export const authService = {
       id: authUser.userId,
       name: attributes.name || 'User',
       email: attributes.email || email,
-      role: (attributes.email === 'admin@shopncart.store') ? 'admin' : 'user', // Basic role mapping
+      // Admin check updated for the new domain
+      role: (attributes.email === 'admin@greenleafherbals.com') ? 'admin' : 'user',
       phone: attributes.phone_number,
       address: attributes['custom:address'],
       city: attributes['custom:city'],
@@ -96,14 +100,14 @@ export const authService = {
         id: authUser.userId,
         name: attributes.name || 'User',
         email: attributes.email || '',
-        role: (attributes.email === 'admin@shopncart.store') ? 'admin' : 'user',
+        role: (attributes.email === 'admin@greenleafherbals.com') ? 'admin' : 'user',
         phone: attributes.phone_number,
         address: attributes['custom:address'],
         city: attributes['custom:city'],
         state: attributes['custom:state'],
         zip: attributes['custom:zip']
       };
-    } catch {
+    } catch (err) {
       return null;
     }
   }

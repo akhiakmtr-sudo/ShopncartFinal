@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ShopNcarT</title>
+    <title>Green Leaf Herbals | Pure & Organic Wellness</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -18,20 +18,23 @@
                 700: '#15803d',
                 900: '#14532d',
               },
-              brand: '#84cc16', // Lime green like the reference
+              brand: '#16a34a', // More of a forest herbal green
             }
           }
         }
       }
     </script>
     <style>
-      /* Hide scrollbar for clean horizontal scrolling */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
       .no-scrollbar {
         -ms-overflow-style: none;
         scrollbar-width: none;
+      }
+      /* Custom active state for buttons */
+      .active\:scale-95:active {
+        transform: scale(0.95);
       }
     </style>
 <script type="importmap">
@@ -45,7 +48,8 @@
     "react": "https://aistudiocdn.com/react@^19.2.1",
     "aws-amplify": "https://esm.sh/aws-amplify@6",
     "aws-amplify/auth": "https://esm.sh/aws-amplify@6/auth",
-    "aws-amplify/": "https://esm.sh/aws-amplify@^6.15.9/"
+    "aws-amplify/": "https://esm.sh/aws-amplify@^6.15.9/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
   }
 }
 </script>
