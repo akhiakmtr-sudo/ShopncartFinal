@@ -26,6 +26,7 @@ import {
   Loader2,
   CheckCircle,
   ChevronRight,
+  ChevronLeft,
   Settings,
   CreditCard
 } from 'lucide-react';
@@ -35,6 +36,37 @@ import Auth from './components/Auth';
 import AdminDashboard from './components/AdminDashboard';
 import { PRODUCTS } from './constants';
 import { Product, CartItem, User, Order, ProductCategory } from './types';
+
+// -- Subcategory Data --
+const MENS_FASHION_SUB = [
+  {
+    title: "Men's Clothing",
+    items: ["Clothing", "T-shirts & Polos", "Shirts", "Jeans", "Innerwear"]
+  },
+  {
+    title: "Accessories",
+    items: ["Watches", "Bags & Luggage", "Sunglasses", "Jewellery", "Wallets"]
+  },
+  {
+    title: "Men's Shoes",
+    items: ["Shoes", "Sports Shoes", "Formal Shoes", "Casual Shoes"]
+  }
+];
+
+const WOMENS_FASHION_SUB = [
+  {
+    title: "Women's Clothing",
+    items: ["Clothing", "Tops & Tees", "Dresses", "Jeans", "Ethnic Wear", "Innerwear"]
+  },
+  {
+    title: "Accessories",
+    items: ["Handbags", "Watches", "Jewellery", "Sunglasses", "Beauty"]
+  },
+  {
+    title: "Women's Shoes",
+    items: ["Flats", "Heels", "Sports Shoes", "Casual Shoes"]
+  }
+];
 
 // -- Loading Component --
 const LoadingOverlay = () => (
@@ -481,6 +513,7 @@ function App() {
   // UI State
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [drawerSubView, setDrawerSubView] = useState<'main' | 'mens-fashion' | 'womens-fashion'>('main');
 
   // --- Global Loading Wrapper ---
   const navigate = async (view: ViewType) => {
@@ -923,6 +956,11 @@ function App() {
             {/* Drawer Header */}
             <div className="p-5 border-b flex justify-between items-center bg-blue-900 text-white">
                <div className="flex items-center space-x-3">
+                 {drawerSubView !== 'main' && (
+                    <button onClick={() => setDrawerSubView('main')} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+                      <ChevronLeft size={24} />
+                    </button>
+                 )}
                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                     <UserIcon size={20} />
                  </div>
@@ -931,64 +969,133 @@ function App() {
                     <p className="text-xs text-blue-200 truncate">{user ? user.email : 'Sign in for better experience'}</p>
                  </div>
                </div>
-               <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X size={24}/></button>
+               <button onClick={() => { setIsMobileMenuOpen(false); setDrawerSubView('main'); }} className="p-2 hover:bg-white/10 rounded-full"><X size={24}/></button>
             </div>
             
             <div className="flex-1 overflow-y-auto py-2 bg-gray-50 no-scrollbar">
-               {/* Login / Profile Actions */}
-               <div className="bg-white mb-2 py-1">
-                 {!user ? (
-                   <button 
-                    onClick={() => { navigate('auth'); setIsMobileMenuOpen(false); }} 
-                    className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-800 font-bold group"
-                   >
-                     <span className="group-hover:text-brand transition-colors">Login / Signup</span>
-                     <ChevronRight size={18} className="text-gray-400 group-hover:text-brand transition-colors" />
-                   </button>
-                 ) : (
-                   <button 
-                    onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} 
-                    className="w-full text-left px-5 py-4 flex items-center justify-between text-red-600 font-bold group"
-                   >
-                     <span>Sign Out</span>
-                     <LogOut size={18} />
-                   </button>
-                 )}
-               </div>
+               
+               {/* Main Drawer View */}
+               {drawerSubView === 'main' && (
+                 <div className="animate-in fade-in slide-in-from-right-4 duration-200">
+                    {/* Login / Profile Actions */}
+                    <div className="bg-white mb-2 py-1">
+                      {!user ? (
+                        <button 
+                          onClick={() => { navigate('auth'); setIsMobileMenuOpen(false); }} 
+                          className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-800 font-bold group"
+                        >
+                          <span className="group-hover:text-brand transition-colors">Login / Signup</span>
+                          <ChevronRight size={18} className="text-gray-400 group-hover:text-brand transition-colors" />
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} 
+                          className="w-full text-left px-5 py-4 flex items-center justify-between text-red-600 font-bold group"
+                        >
+                          <span>Sign Out</span>
+                          <LogOut size={18} />
+                        </button>
+                      )}
+                    </div>
 
-               {/* My Account Section */}
-               <div className="bg-white mb-2 py-1">
-                 <div className="px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">My Account</div>
-                 <button onClick={() => { navigate('orders'); setIsMobileMenuOpen(false); }} className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50 transition-colors">
-                   <div className="flex items-center"><Package size={18} className="mr-3 text-gray-400" /> <span>My Orders</span></div>
-                   <ChevronRight size={16} className="text-gray-300" />
-                 </button>
-                 <button onClick={() => { navigate('address'); setIsMobileMenuOpen(false); }} className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50 transition-colors">
-                   <div className="flex items-center"><MapPin size={18} className="mr-3 text-gray-400" /> <span>Saved Addresses</span></div>
-                   <ChevronRight size={16} className="text-gray-300" />
-                 </button>
-                 <button className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50 transition-colors">
-                   <div className="flex items-center"><CreditCard size={18} className="mr-3 text-gray-400" /> <span>Payment Methods</span></div>
-                   <ChevronRight size={16} className="text-gray-300" />
-                 </button>
-               </div>
-
-               {/* Shop by Category Section */}
-               <div className="bg-white py-1">
-                 <div className="px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Shop by Category</div>
-                 <div className="divide-y divide-gray-100">
-                    {categories.map(cat => (
-                      <button 
-                        key={cat}
-                        onClick={() => { handleCategoryChange(cat); navigate('shop'); setIsMobileMenuOpen(false); }}
-                        className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                      >
-                        <span className="text-[15px] font-medium">{cat}</span>
-                        <ChevronRight size={18} className="text-gray-300" />
+                    {/* My Account Section */}
+                    <div className="bg-white mb-2 py-1">
+                      <div className="px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">My Account</div>
+                      <button onClick={() => { navigate('orders'); setIsMobileMenuOpen(false); }} className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center"><Package size={18} className="mr-3 text-gray-400" /> <span>My Orders</span></div>
+                        <ChevronRight size={16} className="text-gray-300" />
                       </button>
+                      <button onClick={() => { navigate('address'); setIsMobileMenuOpen(false); }} className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center"><MapPin size={18} className="mr-3 text-gray-400" /> <span>Saved Addresses</span></div>
+                        <ChevronRight size={16} className="text-gray-300" />
+                      </button>
+                    </div>
+
+                    {/* Shop by Category Section */}
+                    <div className="bg-white py-1">
+                      <div className="px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-50">Shop by Category</div>
+                      <div className="divide-y divide-gray-100">
+                          {categories.map(cat => (
+                            <button 
+                              key={cat}
+                              onClick={() => { 
+                                if (cat === ProductCategory.MensFashion) {
+                                  setDrawerSubView('mens-fashion');
+                                } else if (cat === ProductCategory.WomensFashion) {
+                                  setDrawerSubView('womens-fashion');
+                                } else {
+                                  handleCategoryChange(cat); 
+                                  navigate('shop'); 
+                                  setIsMobileMenuOpen(false); 
+                                }
+                              }}
+                              className="w-full text-left px-5 py-4 flex items-center justify-between text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                            >
+                              <span className="text-[15px] font-medium">{cat}</span>
+                              <ChevronRight size={18} className="text-gray-300" />
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                 </div>
+               )}
+
+               {/* Men's Fashion Sub View */}
+               {drawerSubView === 'mens-fashion' && (
+                 <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                    {MENS_FASHION_SUB.map((section, sidx) => (
+                      <div key={sidx} className="bg-white mb-2 py-2">
+                         <div className="px-5 py-3 text-lg font-bold text-gray-900">{section.title}</div>
+                         <div className="space-y-1">
+                           {section.items.map((item, iidx) => (
+                             <button 
+                               key={iidx}
+                               onClick={() => {
+                                 handleCategoryChange(ProductCategory.MensFashion);
+                                 setSearchQuery(item); // Simple mock behavior: search for the specific item
+                                 navigate('shop');
+                                 setIsMobileMenuOpen(false);
+                                 setDrawerSubView('main');
+                               }}
+                               className="w-full text-left px-5 py-3.5 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors text-[15px]"
+                             >
+                               {item}
+                             </button>
+                           ))}
+                         </div>
+                      </div>
                     ))}
                  </div>
-               </div>
+               )}
+
+               {/* Women's Fashion Sub View */}
+               {drawerSubView === 'womens-fashion' && (
+                 <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                    {WOMENS_FASHION_SUB.map((section, sidx) => (
+                      <div key={sidx} className="bg-white mb-2 py-2">
+                         <div className="px-5 py-3 text-lg font-bold text-gray-900">{section.title}</div>
+                         <div className="space-y-1">
+                           {section.items.map((item, iidx) => (
+                             <button 
+                               key={iidx}
+                               onClick={() => {
+                                 handleCategoryChange(ProductCategory.WomensFashion);
+                                 setSearchQuery(item);
+                                 navigate('shop');
+                                 setIsMobileMenuOpen(false);
+                                 setDrawerSubView('main');
+                               }}
+                               className="w-full text-left px-5 py-3.5 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors text-[15px]"
+                             >
+                               {item}
+                             </button>
+                           ))}
+                         </div>
+                      </div>
+                    ))}
+                 </div>
+               )}
+
             </div>
             
             {/* Footer / App Version info */}
